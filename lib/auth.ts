@@ -7,10 +7,11 @@ import {
   type User,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { auth as firebaseAuth, db, googleProvider } from "./firebase";
+import { auth as firebaseAuth, db as firebaseDb, googleProvider } from "./firebase";
 import type { UserRole, UserData } from "@/types";
 
 export const auth = firebaseAuth;
+export const db = firebaseDb;
 
 export async function signUpWithEmail(
   email: string,
