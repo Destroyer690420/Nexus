@@ -22,17 +22,19 @@ export async function signUpWithEmail(
   if (error) throw error;
   if (!data.user) throw new Error("Signup failed");
 
-  const { error: dbError } = await supabase.from("users").upsert(
-    {
+  const res = await fetch("/api/auth/create-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
       uid: data.user.id,
-      email: data.user.email,
+      email: data.user.email || email,
       role,
-      approved: role === "faculty" ? false : null,
-      createdAt: Date.now(),
-    },
-    { onConflict: "uid" }
-  );
-  if (dbError) throw dbError;
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Failed to create user profile");
+  }
 
   return data.user;
 }
@@ -79,18 +81,22 @@ export async function createUserData(
   email: string,
   role: UserRole
 ) {
-  const data = {
+  const res = await fetch("/api/auth/create-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uid, email, role }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Failed to create user profile");
+  }
+  return {
     uid,
     email,
     role,
-    approved: role === "faculty" ? false : null,
+    approved: role === "faculty" ? false : undefined,
     createdAt: Date.now(),
-  };
-  const { error } = await supabase.from("users").upsert(data, {
-    onConflict: "uid",
-  });
-  if (error) throw error;
-  return mapUser(data);
+  } as UserData;
 }
 
 export function onAuthChange(
