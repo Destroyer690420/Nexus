@@ -17,13 +17,33 @@ CREATE POLICY "users_select" ON public.users FOR SELECT USING (auth.role() = 'au
 CREATE POLICY "users_insert" ON public.users FOR INSERT WITH CHECK (auth.uid() = uid);
 CREATE POLICY "users_update" ON public.users FOR UPDATE USING (auth.uid() = uid OR auth.role() = 'authenticated');
 
--- Courses
+-- Courses: all authenticated can read; admin can write
 DROP POLICY IF EXISTS "courses_select" ON public.courses;
+DROP POLICY IF EXISTS "courses_insert" ON public.courses;
+DROP POLICY IF EXISTS "courses_update" ON public.courses;
+DROP POLICY IF EXISTS "courses_delete" ON public.courses;
 CREATE POLICY "courses_select" ON public.courses FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "courses_insert" ON public.courses FOR INSERT WITH CHECK (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+);
+CREATE POLICY "courses_update" ON public.courses FOR UPDATE USING (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+);
+CREATE POLICY "courses_delete" ON public.courses FOR DELETE USING (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+);
 
--- Branches
+-- Branches: all authenticated can read; admin can write
 DROP POLICY IF EXISTS "branches_select" ON public.branches;
+DROP POLICY IF EXISTS "branches_insert" ON public.branches;
+DROP POLICY IF EXISTS "branches_delete" ON public.branches;
 CREATE POLICY "branches_select" ON public.branches FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "branches_insert" ON public.branches FOR INSERT WITH CHECK (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+);
+CREATE POLICY "branches_delete" ON public.branches FOR DELETE USING (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+);
 
 -- Student profiles
 DROP POLICY IF EXISTS "sp_select" ON public.student_profiles;

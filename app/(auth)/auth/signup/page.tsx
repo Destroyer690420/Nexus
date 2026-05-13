@@ -24,7 +24,7 @@ export default function SignupPage() {
     setError("");
     try {
       await signUpWithEmail(email, password, role);
-      router.replace("/auth/verify-email");
+      router.replace(`/auth/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError(getAuthErrorMessage(err));
       setLoading(false);
