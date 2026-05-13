@@ -21,46 +21,18 @@ const courses = [
     ],
   },
   {
+    id: "bca",
+    name: "BCA",
+    code: "BCA",
+    hasBranches: false,
+    semesters: [1, 2, 3, 4, 5, 6],
+  },
+  {
     id: "bba",
     name: "BBA",
     code: "BBA",
     hasBranches: false,
     semesters: [1, 2, 3, 4, 5, 6],
-  },
-  {
-    id: "bcom",
-    name: "B.Com",
-    code: "BCOM",
-    hasBranches: false,
-    semesters: [1, 2, 3, 4, 5, 6],
-  },
-  {
-    id: "ba",
-    name: "BA",
-    code: "BA",
-    hasBranches: true,
-    semesters: [1, 2, 3, 4, 5, 6],
-    branches: [
-      { id: "english", name: "English", code: "ENG" },
-      { id: "economics", name: "Economics", code: "ECO" },
-      { id: "pol-sci", name: "Political Science", code: "PSC" },
-      { id: "history", name: "History", code: "HIS" },
-      { id: "psychology", name: "Psychology", code: "PSY" },
-      { id: "sociology", name: "Sociology", code: "SOC" },
-    ],
-  },
-  {
-    id: "mtech",
-    name: "M.Tech",
-    code: "MTECH",
-    hasBranches: true,
-    semesters: [1, 2, 3, 4],
-    branches: [
-      { id: "cse", name: "Computer Science & Engineering", code: "CSE" },
-      { id: "ece", name: "Electronics & Communication", code: "ECE" },
-      { id: "ee", name: "Electrical Engineering", code: "EE" },
-      { id: "mech", name: "Mechanical Engineering", code: "ME" },
-    ],
   },
 ];
 

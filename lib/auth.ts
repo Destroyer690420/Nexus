@@ -18,16 +18,21 @@ export async function signUpWithEmail(
   password: string,
   role: UserRole
 ) {
-  const cred = await createUserWithEmailAndPassword(auth, email, password);
-  await sendEmailVerification(cred.user);
-  await setDoc(doc(db, "users", cred.user.uid), {
-    uid: cred.user.uid,
-    email: cred.user.email,
-    role,
-    createdAt: Date.now(),
-    approved: role === "faculty" ? false : undefined,
-  });
-  return cred.user;
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(cred.user);
+    await setDoc(doc(db, "users", cred.user.uid), {
+      uid: cred.user.uid,
+      email: cred.user.email,
+      role,
+      createdAt: Date.now(),
+      ...(role === "faculty" ? { approved: false } : {}),
+    });
+    return cred.user;
+  } catch (error) {
+    console.error("Signup Error:", error);
+    throw error;
+  }
 }
 
 export async function loginWithEmail(email: string, password: string) {
@@ -57,7 +62,7 @@ export async function createUserData(uid: string, email: string, role: UserRole)
     email,
     role,
     createdAt: Date.now(),
-    approved: role === "faculty" ? false : undefined,
+    ...(role === "faculty" ? { approved: false } : {}),
   };
   await setDoc(doc(db, "users", uid), data);
   return data;
@@ -81,11 +86,14 @@ const errorMessages: Record<string, string> = {
   "auth/weak-password": "Password should be at least 6 characters.",
   "auth/invalid-credential": "Invalid email or password.",
   "auth/popup-closed-by-user": "Sign-in cancelled.",
+  "auth/operation-not-allowed": "Email/Password sign-in is not enabled in Firebase Console.",
 };
 
 export function getAuthErrorMessage(error: unknown): string {
   const code = (error as { code?: string })?.code;
-  return code && errorMessages[code]
-    ? errorMessages[code]
-    : "Something went wrong. Please try again.";
+  if (code) {
+    console.log("Auth Error Code:", code);
+    return errorMessages[code] || "Something went wrong. Please try again.";
+  }
+  return "Something went wrong. Please try again.";
 }
