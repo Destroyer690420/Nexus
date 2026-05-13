@@ -103,6 +103,14 @@ CREATE INDEX IF NOT EXISTS idx_resources_type ON public.resources(type);
 CREATE INDEX IF NOT EXISTS idx_subjects_course ON public.subjects("courseId", "semesterId");
 CREATE INDEX IF NOT EXISTS idx_submissions_student ON public.submissions("studentId");
 
+-- Helper function: returns the current user's role (bypasses RLS via SECURITY DEFINER)
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS TEXT
+LANGUAGE sql SECURITY DEFINER STABLE
+AS $$
+  SELECT role FROM public.users WHERE uid = auth.uid();
+$$;
+
 -- Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
@@ -128,13 +136,13 @@ DROP POLICY IF EXISTS "courses_update" ON public.courses;
 DROP POLICY IF EXISTS "courses_delete" ON public.courses;
 CREATE POLICY "courses_select" ON public.courses FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "courses_insert" ON public.courses FOR INSERT WITH CHECK (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+  public.get_user_role() = 'admin'
 );
 CREATE POLICY "courses_update" ON public.courses FOR UPDATE USING (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+  public.get_user_role() = 'admin'
 );
 CREATE POLICY "courses_delete" ON public.courses FOR DELETE USING (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+  public.get_user_role() = 'admin'
 );
 
 -- Branches: all authenticated can read; admin can write
@@ -143,10 +151,10 @@ DROP POLICY IF EXISTS "branches_insert" ON public.branches;
 DROP POLICY IF EXISTS "branches_delete" ON public.branches;
 CREATE POLICY "branches_select" ON public.branches FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "branches_insert" ON public.branches FOR INSERT WITH CHECK (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+  public.get_user_role() = 'admin'
 );
 CREATE POLICY "branches_delete" ON public.branches FOR DELETE USING (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+  public.get_user_role() = 'admin'
 );
 
 -- Student profiles: users manage their own
@@ -171,10 +179,10 @@ DROP POLICY IF EXISTS "subjects_insert" ON public.subjects;
 DROP POLICY IF EXISTS "subjects_delete" ON public.subjects;
 CREATE POLICY "subjects_select" ON public.subjects FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "subjects_insert" ON public.subjects FOR INSERT WITH CHECK (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+  public.get_user_role() IN ('admin', 'faculty')
 );
 CREATE POLICY "subjects_delete" ON public.subjects FOR DELETE USING (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+  public.get_user_role() = 'admin'
 );
 
 -- Submissions: students manage their own; faculty/admin can read all
@@ -182,7 +190,7 @@ DROP POLICY IF EXISTS "submissions_select" ON public.submissions;
 DROP POLICY IF EXISTS "submissions_insert" ON public.submissions;
 DROP POLICY IF EXISTS "submissions_update" ON public.submissions;
 CREATE POLICY "submissions_select" ON public.submissions FOR SELECT USING (
-  auth.uid() = "studentId" OR (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+  auth.uid() = "studentId" OR public.get_user_role() IN ('admin', 'faculty')
 );
 CREATE POLICY "submissions_insert" ON public.submissions FOR INSERT WITH CHECK (auth.uid() = "studentId");
 CREATE POLICY "submissions_update" ON public.submissions FOR UPDATE USING (auth.uid() = "studentId");
@@ -193,10 +201,10 @@ DROP POLICY IF EXISTS "resources_insert" ON public.resources;
 DROP POLICY IF EXISTS "resources_delete" ON public.resources;
 CREATE POLICY "resources_select" ON public.resources FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "resources_insert" ON public.resources FOR INSERT WITH CHECK (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+  public.get_user_role() IN ('admin', 'faculty')
 );
 CREATE POLICY "resources_delete" ON public.resources FOR DELETE USING (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+  public.get_user_role() IN ('admin', 'faculty')
 );
 
 -- Note: No auto-trigger for user creation.

@@ -1,12 +1,22 @@
 -- RLS Policies for Academia OS
 -- Run this in Supabase SQL Editor (safe to re-run)
 
+-- Helper function: returns the current user's role (bypasses RLS via SECURITY DEFINER)
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS TEXT
+LANGUAGE sql SECURITY DEFINER STABLE
+AS $$
+  SELECT role FROM public.users WHERE uid = auth.uid();
+$$;
+
 -- Enable RLS on all tables (safe if already enabled)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.student_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contributions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 
 -- Users
@@ -23,27 +33,17 @@ DROP POLICY IF EXISTS "courses_insert" ON public.courses;
 DROP POLICY IF EXISTS "courses_update" ON public.courses;
 DROP POLICY IF EXISTS "courses_delete" ON public.courses;
 CREATE POLICY "courses_select" ON public.courses FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "courses_insert" ON public.courses FOR INSERT WITH CHECK (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
-);
-CREATE POLICY "courses_update" ON public.courses FOR UPDATE USING (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
-);
-CREATE POLICY "courses_delete" ON public.courses FOR DELETE USING (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
-);
+CREATE POLICY "courses_insert" ON public.courses FOR INSERT WITH CHECK (public.get_user_role() = 'admin');
+CREATE POLICY "courses_update" ON public.courses FOR UPDATE USING (public.get_user_role() = 'admin');
+CREATE POLICY "courses_delete" ON public.courses FOR DELETE USING (public.get_user_role() = 'admin');
 
 -- Branches: all authenticated can read; admin can write
 DROP POLICY IF EXISTS "branches_select" ON public.branches;
 DROP POLICY IF EXISTS "branches_insert" ON public.branches;
 DROP POLICY IF EXISTS "branches_delete" ON public.branches;
 CREATE POLICY "branches_select" ON public.branches FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "branches_insert" ON public.branches FOR INSERT WITH CHECK (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
-);
-CREATE POLICY "branches_delete" ON public.branches FOR DELETE USING (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
-);
+CREATE POLICY "branches_insert" ON public.branches FOR INSERT WITH CHECK (public.get_user_role() = 'admin');
+CREATE POLICY "branches_delete" ON public.branches FOR DELETE USING (public.get_user_role() = 'admin');
 
 -- Student profiles
 DROP POLICY IF EXISTS "sp_select" ON public.student_profiles;
@@ -61,24 +61,20 @@ CREATE POLICY "contrib_select" ON public.contributions FOR SELECT USING (auth.ro
 CREATE POLICY "contrib_insert" ON public.contributions FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 CREATE POLICY "contrib_update" ON public.contributions FOR UPDATE USING (auth.role() = 'authenticated');
 
--- Subjects
+-- Subjects: authenticated can read all; admin/faculty can insert; admin can delete
 DROP POLICY IF EXISTS "subjects_select" ON public.subjects;
 DROP POLICY IF EXISTS "subjects_insert" ON public.subjects;
 DROP POLICY IF EXISTS "subjects_delete" ON public.subjects;
 CREATE POLICY "subjects_select" ON public.subjects FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "subjects_insert" ON public.subjects FOR INSERT WITH CHECK (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
-);
-CREATE POLICY "subjects_delete" ON public.subjects FOR DELETE USING (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
-);
+CREATE POLICY "subjects_insert" ON public.subjects FOR INSERT WITH CHECK (public.get_user_role() IN ('admin', 'faculty'));
+CREATE POLICY "subjects_delete" ON public.subjects FOR DELETE USING (public.get_user_role() = 'admin');
 
 -- Submissions: students manage their own; faculty/admin can read all
 DROP POLICY IF EXISTS "submissions_select" ON public.submissions;
 DROP POLICY IF EXISTS "submissions_insert" ON public.submissions;
 DROP POLICY IF EXISTS "submissions_update" ON public.submissions;
 CREATE POLICY "submissions_select" ON public.submissions FOR SELECT USING (
-  auth.uid() = "studentId" OR (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+  auth.uid() = "studentId" OR public.get_user_role() IN ('admin', 'faculty')
 );
 CREATE POLICY "submissions_insert" ON public.submissions FOR INSERT WITH CHECK (auth.uid() = "studentId");
 CREATE POLICY "submissions_update" ON public.submissions FOR UPDATE USING (auth.uid() = "studentId");
@@ -88,9 +84,5 @@ DROP POLICY IF EXISTS "resources_select" ON public.resources;
 DROP POLICY IF EXISTS "resources_insert" ON public.resources;
 DROP POLICY IF EXISTS "resources_delete" ON public.resources;
 CREATE POLICY "resources_select" ON public.resources FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "resources_insert" ON public.resources FOR INSERT WITH CHECK (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
-);
-CREATE POLICY "resources_delete" ON public.resources FOR DELETE USING (
-  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
-);
+CREATE POLICY "resources_insert" ON public.resources FOR INSERT WITH CHECK (public.get_user_role() IN ('admin', 'faculty'));
+CREATE POLICY "resources_delete" ON public.resources FOR DELETE USING (public.get_user_role() IN ('admin', 'faculty'));
