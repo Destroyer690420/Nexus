@@ -218,6 +218,48 @@ export async function deleteSubject(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// ─── Submissions ────────────────────────────────────────
+
+export async function getSubmission(
+  assignmentId: string,
+  studentId: string
+): Promise<{ id: string; status: string; fileUrl: string } | null> {
+  const { data } = await supabase
+    .from("submissions")
+    .select("id, status, fileUrl")
+    .eq("assignmentId", assignmentId)
+    .eq("studentId", studentId)
+    .maybeSingle();
+  return data as { id: string; status: string; fileUrl: string } | null;
+}
+
+export async function upsertSubmission(
+  assignmentId: string,
+  studentId: string,
+  status: string,
+  fileUrl?: string
+): Promise<void> {
+  const existing = await getSubmission(assignmentId, studentId);
+  if (existing) {
+    await supabase
+      .from("submissions")
+      .update({
+        status,
+        fileUrl: fileUrl || existing.fileUrl,
+        submittedAt: status === "submitted" ? Date.now() : null,
+      })
+      .eq("id", existing.id);
+  } else {
+    await supabase.from("submissions").insert({
+      assignmentId,
+      studentId,
+      status,
+      fileUrl: fileUrl || "",
+      submittedAt: status === "submitted" ? Date.now() : null,
+    });
+  }
+}
+
 // ─── Contributions / Content Queue ─────────────────────
 
 export async function getPendingContributions(): Promise<Contribution[]> {

@@ -68,6 +68,16 @@ CREATE TABLE IF NOT EXISTS public.subjects (
   code TEXT NOT NULL
 );
 
+-- Submissions (for assignment tracking)
+CREATE TABLE IF NOT EXISTS public.submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "assignmentId" UUID NOT NULL,
+  "studentId" UUID NOT NULL,
+  "fileUrl" TEXT DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'submitted', 'late')),
+  "submittedAt" BIGINT DEFAULT NULL
+);
+
 -- Resources (polymorphic: notes, pyqs, assignments, lab_manuals, others)
 CREATE TABLE IF NOT EXISTS public.resources (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -91,6 +101,7 @@ CREATE INDEX IF NOT EXISTS idx_branches_course_id ON public.branches("courseId")
 CREATE INDEX IF NOT EXISTS idx_contributions_status ON public.contributions(status);
 CREATE INDEX IF NOT EXISTS idx_resources_type ON public.resources(type);
 CREATE INDEX IF NOT EXISTS idx_subjects_course ON public.subjects("courseId", "semesterId");
+CREATE INDEX IF NOT EXISTS idx_submissions_student ON public.submissions("studentId");
 
 -- Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -98,6 +109,8 @@ ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.student_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contributions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 
 -- Users: authenticated can read all; insert/update own row
@@ -163,6 +176,16 @@ CREATE POLICY "subjects_insert" ON public.subjects FOR INSERT WITH CHECK (
 CREATE POLICY "subjects_delete" ON public.subjects FOR DELETE USING (
   (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
 );
+
+-- Submissions: students manage their own; faculty/admin can read all
+DROP POLICY IF EXISTS "submissions_select" ON public.submissions;
+DROP POLICY IF EXISTS "submissions_insert" ON public.submissions;
+DROP POLICY IF EXISTS "submissions_update" ON public.submissions;
+CREATE POLICY "submissions_select" ON public.submissions FOR SELECT USING (
+  auth.uid() = "studentId" OR (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+);
+CREATE POLICY "submissions_insert" ON public.submissions FOR INSERT WITH CHECK (auth.uid() = "studentId");
+CREATE POLICY "submissions_update" ON public.submissions FOR UPDATE USING (auth.uid() = "studentId");
 
 -- Resources: authenticated can read all; faculty/admin can insert
 DROP POLICY IF EXISTS "resources_select" ON public.resources;

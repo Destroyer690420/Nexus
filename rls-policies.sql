@@ -73,6 +73,16 @@ CREATE POLICY "subjects_delete" ON public.subjects FOR DELETE USING (
   (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
 );
 
+-- Submissions: students manage their own; faculty/admin can read all
+DROP POLICY IF EXISTS "submissions_select" ON public.submissions;
+DROP POLICY IF EXISTS "submissions_insert" ON public.submissions;
+DROP POLICY IF EXISTS "submissions_update" ON public.submissions;
+CREATE POLICY "submissions_select" ON public.submissions FOR SELECT USING (
+  auth.uid() = "studentId" OR (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+);
+CREATE POLICY "submissions_insert" ON public.submissions FOR INSERT WITH CHECK (auth.uid() = "studentId");
+CREATE POLICY "submissions_update" ON public.submissions FOR UPDATE USING (auth.uid() = "studentId");
+
 -- Resources: authenticated can read all; faculty/admin can write
 DROP POLICY IF EXISTS "resources_select" ON public.resources;
 DROP POLICY IF EXISTS "resources_insert" ON public.resources;

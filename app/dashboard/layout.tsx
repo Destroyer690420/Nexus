@@ -61,11 +61,12 @@ export default function DashboardLayout({
             label="Home"
           />
           {userData?.role === "student" && (
-            <NavItem
-              href="/dashboard/notes"
-              active={pathname.startsWith("/dashboard/notes")}
-              label="Notes"
-            />
+            <>
+              <NavItem href="/dashboard/notes" active={pathname.startsWith("/dashboard/notes")} label="Notes" />
+              <NavItem href="/dashboard/pyqs" active={pathname.startsWith("/dashboard/pyqs")} label="PYQs" />
+              <NavItem href="/dashboard/assignments" active={pathname.startsWith("/dashboard/assignments")} label="Assignments" />
+              <NavItem href="/dashboard/lab-manuals" active={pathname.startsWith("/dashboard/lab-manuals")} label="Lab Manuals" />
+            </>
           )}
           {userData?.role !== "student" && (
             <NavItem
