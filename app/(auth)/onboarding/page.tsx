@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { doc, setDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { Button } from "@/components/ui";
-import { auth, db, onAuthChange } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+import { onAuthChange, getCurrentUser } from "@/lib/supabase-auth";
 
 interface Course {
   id: string;
@@ -38,15 +38,8 @@ export default function OnboardingPage() {
         router.replace("/auth");
         return;
       }
-      try {
-        const snap = await getDocs(collection(db, "courses"));
-        const courseList = snap.docs.map(
-          (d) => ({ id: d.id, ...d.data() }) as Course
-        );
-        setCourses(courseList);
-      } catch {
-        setError("Failed to load courses. Make sure the database is seeded.");
-      }
+      const { data } = await supabase.from("courses").select("*");
+      setCourses((data || []) as Course[]);
       setDataLoading(false);
     });
     return unsub;
@@ -65,13 +58,11 @@ export default function OnboardingPage() {
       return;
     }
     const fetchBranches = async () => {
-      const q = query(
-        collection(db, "branches"),
-        where("courseId", "==", selectedCourse)
-      );
-      const snap = await getDocs(q);
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Branch);
-      setBranches(list);
+      const { data } = await supabase
+        .from("branches")
+        .select("*")
+        .eq("courseId", selectedCourse);
+      setBranches((data || []) as Branch[]);
       setSelectedBranch("");
     };
     fetchBranches();
@@ -81,27 +72,26 @@ export default function OnboardingPage() {
 
   const handleSubmit = async () => {
     if (!selectedCourse || !selectedSemester) return;
-    if (
-      selectedCourseData?.hasBranches &&
-      !selectedBranch
-    )
-      return;
+    if (selectedCourseData?.hasBranches && !selectedBranch) return;
 
     setLoading(true);
     setError("");
     try {
-      const user = auth.currentUser;
+      const user = await getCurrentUser();
       if (!user) {
         router.replace("/auth");
         return;
       }
-      await setDoc(doc(db, "studentProfiles", user.uid), {
-        uid: user.uid,
-        courseId: selectedCourse,
-        branchId: selectedCourseData?.hasBranches ? selectedBranch : null,
-        semesterId: Number(selectedSemester),
-        createdAt: Date.now(),
-      });
+      const { error: dbError } = await supabase
+        .from("student_profiles")
+        .upsert({
+          uid: user.id,
+          courseId: selectedCourse,
+          branchId: selectedCourseData?.hasBranches ? selectedBranch : null,
+          semesterId: Number(selectedSemester),
+          createdAt: Date.now(),
+        });
+      if (dbError) throw dbError;
       router.replace("/dashboard");
     } catch (err) {
       setError(

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
-import { auth, createUserData, getAuthErrorMessage } from "@/lib/auth";
+import { getCurrentUser, createUserData, getAuthErrorMessage } from "@/lib/supabase-auth";
 import type { UserRole } from "@/types";
 
 export default function RoleSelectionPage() {
@@ -16,12 +16,12 @@ export default function RoleSelectionPage() {
     setLoading(true);
     setError("");
     try {
-      const user = auth.currentUser;
+      const user = await getCurrentUser();
       if (!user) {
         router.replace("/auth");
         return;
       }
-      await createUserData(user.uid, user.email || "", role);
+      await createUserData(user.id, user.email || "", role);
       if (role === "student") router.replace("/onboarding");
       else router.replace("/waitlist");
     } catch (err) {

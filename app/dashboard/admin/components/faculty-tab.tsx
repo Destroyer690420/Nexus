@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button, Card } from "@/components/ui";
-import { auth } from "@/lib/auth";
-import { getIdToken } from "firebase/auth";
-import { getPendingFaculty } from "@/lib/admin";
+import { getSessionToken } from "@/lib/supabase-auth";
+import { getPendingFaculty } from "@/lib/queries";
 import type { UserData } from "@/types";
 
 export function FacultyTab() {
@@ -21,9 +20,8 @@ export function FacultyTab() {
   const handleAction = async (uid: string, approved: boolean) => {
     setApprovingUid(uid);
     try {
-      const user = auth.currentUser;
-      if (!user) return;
-      const token = await getIdToken(user);
+      const token = await getSessionToken();
+      if (!token) return;
       const res = await fetch("/api/admin/approve", {
         method: "POST",
         headers: {

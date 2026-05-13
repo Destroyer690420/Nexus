@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button, Card } from "@/components/ui";
-import { getAllResources, deleteResource } from "@/lib/admin";
-import { getAllCourses } from "@/lib/admin";
-import type { Resource, ResourceType, Course } from "@/types";
+import { getAllResources, deleteResource } from "@/lib/queries";
+import type { Resource, ResourceType } from "@/types";
 
 const resourceLabels: Record<ResourceType, string> = {
   notes: "Notes",
@@ -16,16 +15,13 @@ const resourceLabels: Record<ResourceType, string> = {
 
 export function ResourcesTab() {
   const [resources, setResources] = useState<Resource[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<ResourceType | "all">("all");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deletingType, setDeletingType] = useState<ResourceType | null>(null);
 
   useEffect(() => {
-    Promise.all([loadResources(), getAllCourses()])
-      .then(([_, c]) => setCourses(c))
-      .finally(() => setLoading(false));
+    loadResources().finally(() => setLoading(false));
   }, []);
 
   const loadResources = async () => {
@@ -52,9 +48,10 @@ export function ResourcesTab() {
     }
   };
 
-  const filtered = filterType === "all"
-    ? resources
-    : resources.filter((r) => r.type === filterType);
+  const filtered =
+    filterType === "all"
+      ? resources
+      : resources.filter((r) => r.type === filterType);
 
   if (loading) {
     return (
@@ -105,7 +102,10 @@ export function ResourcesTab() {
       ) : (
         <div className="flex flex-col gap-2">
           {filtered.map((r) => (
-            <Card key={`${r.type}-${r.id}`} className="p-3 flex items-center justify-between">
+            <Card
+              key={`${r.type}-${r.id}`}
+              className="p-3 flex items-center justify-between"
+            >
               <div className="flex items-center gap-3 min-w-0">
                 <span className="rounded bg-accent-light px-2 py-0.5 text-xs font-medium text-accent uppercase flex-shrink-0">
                   {r.type}
@@ -133,54 +133,41 @@ export function ResourcesTab() {
         </div>
       )}
 
-      <Modal
-        isOpen={deleteConfirm !== null}
-        onClose={() => setDeleteConfirm(null)}
-        title="Delete Resource"
-      >
-        <div className="flex flex-col gap-4">
-          <p className="text-sm text-text-secondary">
-            Are you sure you want to delete this resource? This cannot be undone.
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => setDeleteConfirm(null)}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDelete} className="flex-1">
-              Delete
-            </Button>
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setDeleteConfirm(null)}
+          />
+          <div className="relative z-10 w-full max-w-md rounded-lg border border-border bg-white p-6 shadow-lg">
+            <h2 className="text-lg font-semibold text-text-primary mb-4">
+              Delete Resource
+            </h2>
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-text-secondary">
+                Are you sure you want to delete this resource? This cannot be
+                undone.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setDeleteConfirm(null)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  className="flex-1"
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
-      </Modal>
-    </div>
-  );
-}
-
-function Modal({
-  isOpen,
-  onClose,
-  title,
-  children,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-}) {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-lg border border-border bg-white p-6 shadow-lg">
-        <h2 className="text-lg font-semibold text-text-primary mb-4">
-          {title}
-        </h2>
-        {children}
-      </div>
+      )}
     </div>
   );
 }

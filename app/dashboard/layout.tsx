@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { onAuthChange, getUserData } from "@/lib/auth";
+import { onAuthChange, getUserData } from "@/lib/supabase-auth";
 import type { UserData } from "@/types";
 
 export default function DashboardLayout({
@@ -21,7 +21,7 @@ export default function DashboardLayout({
         router.replace("/auth");
         return;
       }
-      const data = await getUserData(user.uid);
+      const data = await getUserData(user.id);
       if (!data) {
         router.replace("/auth");
         return;

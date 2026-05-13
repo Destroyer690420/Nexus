@@ -36,7 +36,7 @@ yarn-error.log*
 # vercel
 .vercel
 
-# firebase service account
+# supabase
 service-account.json
 
 # typescript

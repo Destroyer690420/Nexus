@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { doc, onSnapshot } from "firebase/firestore";
 import { Button } from "@/components/ui";
-import { auth, db, onAuthChange, logout } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+import { onAuthChange, logout } from "@/lib/supabase-auth";
 
 export default function WaitlistPage() {
   const router = useRouter();
@@ -22,17 +22,27 @@ export default function WaitlistPage() {
   }, [router]);
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+    const channel = supabase
+      .channel("waitlist")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "users",
+          filter: `uid=eq.${supabase.auth.getSession().then(({ data }) => data.session?.user?.id)}`,
+        },
+        (payload) => {
+          if ((payload.new as { approved?: boolean })?.approved === true) {
+            router.replace("/dashboard");
+          }
+        }
+      )
+      .subscribe();
 
-    const unsub = onSnapshot(doc(db, "users", user.uid), (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data();
-      if (data.approved === true) {
-        router.replace("/dashboard");
-      }
-    });
-    return unsub;
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [router]);
 
   const handleLogout = async () => {

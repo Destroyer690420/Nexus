@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
-import { onAuthChange, getUserData, db } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+import { onAuthChange, getUserData } from "@/lib/supabase-auth";
 import type { UserData } from "@/types";
 
 export default function DashboardPage() {
@@ -16,7 +16,7 @@ export default function DashboardPage() {
         router.replace("/auth");
         return;
       }
-      const data = await getUserData(user.uid);
+      const data = await getUserData(user.id);
       if (!data) {
         router.replace("/auth");
         return;
@@ -24,8 +24,12 @@ export default function DashboardPage() {
       setUserData(data);
 
       if (data.role === "student") {
-        const profileSnap = await getDoc(doc(db, "studentProfiles", user.uid));
-        if (!profileSnap.exists()) {
+        const { data: profile } = await supabase
+          .from("student_profiles")
+          .select("*")
+          .eq("uid", user.id)
+          .single();
+        if (!profile) {
           router.replace("/onboarding");
           return;
         }

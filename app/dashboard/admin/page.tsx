@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { onAuthChange, getUserData } from "@/lib/auth";
+import { onAuthChange, getUserData } from "@/lib/supabase-auth";
 import {
   OverviewTab,
   FacultyTab,
@@ -35,7 +35,7 @@ export default function AdminPage() {
         router.replace("/auth");
         return;
       }
-      const data = await getUserData(user.uid);
+      const data = await getUserData(user.id);
       if (!data || data.role !== "admin") {
         router.replace("/dashboard");
         return;

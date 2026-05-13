@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { User } from "firebase/auth";
-import { onAuthChange, getUserData } from "@/lib/auth";
+import type { User } from "@supabase/supabase-js";
+import { onAuthChange, getUserData } from "@/lib/supabase-auth";
 import type { UserData } from "@/types";
 
 interface AuthContextType {
@@ -23,21 +23,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthChange(async (firebaseUser) => {
-      setUser(firebaseUser);
-      
-      if (firebaseUser) {
+    const unsubscribe = onAuthChange(async (supabaseUser) => {
+      if (supabaseUser) {
+        setUser(supabaseUser);
         try {
-          const data = await getUserData(firebaseUser.uid);
+          const data = await getUserData(supabaseUser.id);
           setUserData(data);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
+        } catch {
           setUserData(null);
         }
       } else {
+        setUser(null);
         setUserData(null);
       }
-      
       setLoading(false);
     });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getAdminStats } from "@/lib/admin";
+import { getAdminStats } from "@/lib/queries";
 
 export function OverviewTab() {
   const [stats, setStats] = useState({

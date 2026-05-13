@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,15 +9,18 @@ export async function POST(req: NextRequest) {
     }
 
     const token = authHeader.split("Bearer ")[1];
-    let decoded;
-    try {
-      decoded = await adminAuth.verifyIdToken(token);
-    } catch {
+    const { data: { user }, error: verifyError } = await supabaseAdmin.auth.getUser(token);
+    if (verifyError || !user) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const adminDoc = await adminDb.collection("users").doc(decoded.uid).get();
-    if (!adminDoc.exists || adminDoc.data()?.role !== "admin") {
+    const { data: adminUser } = await supabaseAdmin
+      .from("users")
+      .select("role")
+      .eq("uid", user.id)
+      .single();
+
+    if (!adminUser || adminUser.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -26,7 +29,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
 
-    await adminDb.collection("users").doc(uid).update({ approved });
+    const { error: updateError } = await supabaseAdmin
+      .from("users")
+      .update({ approved })
+      .eq("uid", uid);
+
+    if (updateError) throw updateError;
+
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button, Card, Input } from "@/components/ui";
-import { getAllUsers, updateUserRole } from "@/lib/admin";
-import { auth } from "@/lib/auth";
-import { getIdToken } from "firebase/auth";
+import { getAllUsers, updateUserRole } from "@/lib/queries";
+import { getSessionToken } from "@/lib/supabase-auth";
 import type { UserData, UserRole } from "@/types";
 
 const roleColors: Record<UserRole, string> = {
@@ -47,9 +46,8 @@ export function UsersTab() {
   const handleFacultyApprove = async (uid: string) => {
     setApprovingUid(uid);
     try {
-      const user = auth.currentUser;
-      if (!user) return;
-      const token = await getIdToken(user);
+      const token = await getSessionToken();
+      if (!token) return;
       const res = await fetch("/api/admin/approve", {
         method: "POST",
         headers: {
@@ -117,9 +115,7 @@ export function UsersTab() {
               {u.role === "faculty" && (
                 <span
                   className={`text-xs ${
-                    u.approved
-                      ? "text-success"
-                      : "text-warning"
+                    u.approved ? "text-success" : "text-warning"
                   }`}
                 >
                   {u.approved ? "Approved" : "Pending"}

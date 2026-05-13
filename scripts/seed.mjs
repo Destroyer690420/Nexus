@@ -1,30 +1,28 @@
-import { initializeApp, cert } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-import { getAuth } from "firebase-admin/auth";
+import { createClient } from "@supabase/supabase-js";
 import { readFileSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-let serviceAccount;
-const saEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
-if (saEnv) {
-  serviceAccount = JSON.parse(saEnv);
-} else {
-  const saPath = resolve(__dirname, "../service-account.json");
-  if (!existsSync(saPath)) {
-    console.error(
-      "Missing service-account.json. Download it from Firebase Console > Project Settings > Service Accounts, then save it in the project root."
-    );
-    process.exit(1);
-  }
-  serviceAccount = JSON.parse(readFileSync(saPath, "utf-8"));
+let supabaseUrl, supabaseServiceKey;
+const envPath = resolve(__dirname, "../.env.local");
+if (existsSync(envPath)) {
+  const env = readFileSync(envPath, "utf-8");
+  const urlMatch = env.match(/NEXT_PUBLIC_SUPABASE_URL=(.+)/);
+  const keyMatch = env.match(/SUPABASE_SERVICE_ROLE_KEY=(.+)/);
+  if (urlMatch) supabaseUrl = urlMatch[1].trim();
+  if (keyMatch) supabaseServiceKey = keyMatch[1].trim();
 }
 
-const app = initializeApp({ credential: cert(serviceAccount) });
-const db = getFirestore(app);
-const auth = getAuth(app);
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error("Missing Supabase credentials in .env.local");
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
 const ADMIN_EMAIL = "admin@academiaos.com";
 const ADMIN_PASSWORD = "Admin123!";
@@ -37,12 +35,12 @@ const courses = [
     hasBranches: true,
     semesters: [1, 2, 3, 4, 5, 6, 7, 8],
     branches: [
-      { id: "cse", name: "Computer Science & Engineering", code: "CSE" },
-      { id: "it", name: "Information Technology", code: "IT" },
-      { id: "ece", name: "Electronics & Communication", code: "ECE" },
-      { id: "ee", name: "Electrical Engineering", code: "EE" },
-      { id: "mech", name: "Mechanical Engineering", code: "ME" },
-      { id: "civil", name: "Civil Engineering", code: "CE" },
+      { id: "btech_cse", name: "Computer Science & Engineering", code: "CSE", courseId: "btech" },
+      { id: "btech_it", name: "Information Technology", code: "IT", courseId: "btech" },
+      { id: "btech_ece", name: "Electronics & Communication", code: "ECE", courseId: "btech" },
+      { id: "btech_ee", name: "Electrical Engineering", code: "EE", courseId: "btech" },
+      { id: "btech_mech", name: "Mechanical Engineering", code: "ME", courseId: "btech" },
+      { id: "btech_civil", name: "Civil Engineering", code: "CE", courseId: "btech" },
     ],
   },
   {
@@ -64,49 +62,40 @@ const courses = [
 async function seed() {
   console.log("Seeding database...\n");
 
-  // 1. Create admin user
-  try {
-    const existing = await auth.getUserByEmail(ADMIN_EMAIL);
-    console.log(`Admin user already exists: ${existing.uid}`);
-    await db.collection("users").doc(existing.uid).set(
-      {
-        uid: existing.uid,
-        email: ADMIN_EMAIL,
-        role: "admin",
-        createdAt: Date.now(),
-      },
-      { merge: true }
+  const { data: userList } = await supabase.auth.admin.listUsers();
+  let existing = userList?.users?.find((u) => u.email === ADMIN_EMAIL);
+
+  if (existing) {
+    console.log(`Admin user already exists: ${existing.id}`);
+    await supabase.from("users").upsert(
+      { uid: existing.id, email: ADMIN_EMAIL, role: "admin", createdAt: Date.now() },
+      { onConflict: "uid" }
     );
-  } catch {
-    const user = await auth.createUser({
+  } else {
+    const { data, error } = await supabase.auth.admin.createUser({
       email: ADMIN_EMAIL,
       password: ADMIN_PASSWORD,
-      displayName: "Admin",
+      email_confirm: true,
     });
-    await db.collection("users").doc(user.uid).set({
-      uid: user.uid,
-      email: ADMIN_EMAIL,
-      role: "admin",
-      createdAt: Date.now(),
-    });
-    console.log(`Admin user created: ${user.uid}`);
+    if (error) throw error;
+    console.log(`Admin user created: ${data.user.id}`);
+    await supabase.from("users").upsert(
+      { uid: data.user.id, email: ADMIN_EMAIL, role: "admin", createdAt: Date.now() },
+      { onConflict: "uid" }
+    );
   }
 
   console.log(`  Email: ${ADMIN_EMAIL}`);
   console.log(`  Password: ${ADMIN_PASSWORD}\n`);
 
-  // 2. Seed courses
   for (const course of courses) {
     const { branches, ...courseData } = course;
-    await db.collection("courses").doc(course.id).set(courseData);
+    await supabase.from("courses").upsert(courseData, { onConflict: "id" });
     console.log(`Course: ${course.name}`);
 
     if (branches) {
       for (const branch of branches) {
-        await db
-          .collection("branches")
-          .doc(`${course.id}_${branch.id}`)
-          .set({ ...branch, courseId: course.id });
+        await supabase.from("branches").upsert(branch, { onConflict: "id" });
         console.log(`  Branch: ${branch.name}`);
       }
     }

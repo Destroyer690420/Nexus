@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import {
-  auth,
   sendVerificationEmail,
   getUserData,
   onAuthChange,
+  getCurrentUser,
   getAuthErrorMessage,
-} from "@/lib/auth";
+} from "@/lib/supabase-auth";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -25,8 +25,8 @@ export default function VerifyEmailPage() {
         return;
       }
       setEmail(user.email || "");
-      if (user.emailVerified) {
-        const data = await getUserData(user.uid);
+      if (user.email_confirmed_at) {
+        const data = await getUserData(user.id);
         if (data?.role === "student") router.replace("/onboarding");
         else if (data?.role === "faculty") router.replace("/waitlist");
         else router.replace("/dashboard");
@@ -37,12 +37,11 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      const user = auth.currentUser;
+      const user = await getCurrentUser();
       if (!user) return;
-      await user.reload();
-      if (user.emailVerified) {
+      if (user.email_confirmed_at) {
         clearInterval(interval);
-        const data = await getUserData(user.uid);
+        const data = await getUserData(user.id);
         if (data?.role === "student") router.replace("/onboarding");
         else if (data?.role === "faculty") router.replace("/waitlist");
         else router.replace("/dashboard");
@@ -66,14 +65,13 @@ export default function VerifyEmailPage() {
   const handleCheckNow = async () => {
     setChecking(true);
     setMessage("");
-    const user = auth.currentUser;
+    const user = await getCurrentUser();
     if (!user) {
       router.replace("/auth");
       return;
     }
-    await user.reload();
-    if (user.emailVerified) {
-      const data = await getUserData(user.uid);
+    if (user.email_confirmed_at) {
+      const data = await getUserData(user.id);
       if (data?.role === "student") router.replace("/onboarding");
       else if (data?.role === "faculty") router.replace("/waitlist");
       else router.replace("/dashboard");

@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
-import { signInWithGoogle, getUserData, onAuthChange } from "@/lib/auth";
+import { signInWithGoogle, getUserData, onAuthChange } from "@/lib/supabase-auth";
+import { getCurrentUser } from "@/lib/supabase-auth";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function AuthPage() {
   useEffect(() => {
     const unsub = onAuthChange(async (user) => {
       if (!user) return;
-      const data = await getUserData(user.uid);
+      const data = await getUserData(user.id);
       if (!data) return;
       if (data.role === "student") router.replace("/onboarding");
       else if (data.role === "faculty") router.replace("/waitlist");
@@ -26,15 +27,7 @@ export default function AuthPage() {
     setLoading(true);
     setError("");
     try {
-      const user = await signInWithGoogle();
-      const data = await getUserData(user.uid);
-      if (data) {
-        if (data.role === "student") router.replace("/onboarding");
-        else if (data.role === "faculty") router.replace("/waitlist");
-        else router.replace("/dashboard");
-      } else {
-        router.replace("/auth/role");
-      }
+      await signInWithGoogle();
     } catch (err) {
       setError((err as { message?: string })?.message || "Something went wrong.");
       setLoading(false);

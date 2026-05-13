@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 const ADMIN_EMAIL = "admin@academiaos.com";
 const ADMIN_PASSWORD = "Admin123!";
@@ -12,12 +12,12 @@ const courses = [
     hasBranches: true,
     semesters: [1, 2, 3, 4, 5, 6, 7, 8],
     branches: [
-      { id: "cse", name: "Computer Science & Engineering", code: "CSE" },
-      { id: "it", name: "Information Technology", code: "IT" },
-      { id: "ece", name: "Electronics & Communication", code: "ECE" },
-      { id: "ee", name: "Electrical Engineering", code: "EE" },
-      { id: "mech", name: "Mechanical Engineering", code: "ME" },
-      { id: "civil", name: "Civil Engineering", code: "CE" },
+      { id: "btech_cse", name: "Computer Science & Engineering", code: "CSE", courseId: "btech" },
+      { id: "btech_it", name: "Information Technology", code: "IT", courseId: "btech" },
+      { id: "btech_ece", name: "Electronics & Communication", code: "ECE", courseId: "btech" },
+      { id: "btech_ee", name: "Electrical Engineering", code: "EE", courseId: "btech" },
+      { id: "btech_mech", name: "Mechanical Engineering", code: "ME", courseId: "btech" },
+      { id: "btech_civil", name: "Civil Engineering", code: "CE", courseId: "btech" },
     ],
   },
   {
@@ -40,42 +40,46 @@ export async function POST() {
   try {
     const results: string[] = [];
 
+    const { data: userList } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = userList?.users?.find((u) => u.email === ADMIN_EMAIL);
     let adminUid: string;
-    try {
-      const existing = await adminAuth.getUserByEmail(ADMIN_EMAIL);
-      adminUid = existing.uid;
-      await adminDb.collection("users").doc(existing.uid).set(
-        { uid: existing.uid, email: ADMIN_EMAIL, role: "admin", createdAt: Date.now() },
-        { merge: true }
+
+    if (existingUser) {
+      adminUid = existingUser.id;
+      await supabaseAdmin.from("users").upsert(
+        { uid: adminUid, email: ADMIN_EMAIL, role: "admin", createdAt: Date.now() },
+        { onConflict: "uid" }
       );
-      results.push(`Admin user already existed: ${existing.uid}`);
-    } catch {
-      const user = await adminAuth.createUser({
+      results.push(`Admin user already existed: ${adminUid}`);
+    } else {
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: ADMIN_EMAIL,
         password: ADMIN_PASSWORD,
-        displayName: "Admin",
+        email_confirm: true,
       });
-      adminUid = user.uid;
-      await adminDb.collection("users").doc(user.uid).set({
-        uid: user.uid,
-        email: ADMIN_EMAIL,
-        role: "admin",
-        createdAt: Date.now(),
-      });
-      results.push(`Admin user created: ${user.uid}`);
+      if (createError) throw createError;
+      adminUid = newUser!.user.id;
+      await supabaseAdmin.from("users").upsert(
+        { uid: adminUid, email: ADMIN_EMAIL, role: "admin", createdAt: Date.now() },
+        { onConflict: "uid" }
+      );
+      results.push(`Admin user created: ${adminUid}`);
     }
 
     for (const course of courses) {
       const { branches, ...courseData } = course;
-      await adminDb.collection("courses").doc(course.id).set(courseData);
+      const { error: courseError } = await supabaseAdmin
+        .from("courses")
+        .upsert(courseData, { onConflict: "id" });
+      if (courseError) throw courseError;
       results.push(`Course seeded: ${course.name}`);
 
       if (branches) {
         for (const branch of branches) {
-          await adminDb
-            .collection("branches")
-            .doc(`${course.id}_${branch.id}`)
-            .set({ ...branch, courseId: course.id });
+          const { error: branchError } = await supabaseAdmin
+            .from("branches")
+            .upsert(branch, { onConflict: "id" });
+          if (branchError) throw branchError;
         }
       }
     }

@@ -6,15 +6,14 @@ import {
   getPendingContributions,
   approveContribution,
   rejectContribution,
-} from "@/lib/admin";
-import { auth } from "@/lib/auth";
+} from "@/lib/queries";
+import { getCurrentUser } from "@/lib/supabase-auth";
 import type { Contribution } from "@/types";
 
 export function QueueTab() {
   const [items, setItems] = useState<Contribution[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionUid, setActionUid] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Contribution | null>(null);
 
   useEffect(() => {
     getPendingContributions()
@@ -25,9 +24,9 @@ export function QueueTab() {
   const handleApprove = async (id: string) => {
     setActionUid(id);
     try {
-      const user = auth.currentUser;
+      const user = await getCurrentUser();
       if (!user) return;
-      await approveContribution(id, user.uid);
+      await approveContribution(id, user.id);
       setItems((prev) => prev.filter((i) => i.id !== id));
     } catch {
       alert("Failed to approve contribution.");

@@ -10,7 +10,7 @@ import {
   deleteCourse,
   createBranch,
   deleteBranch,
-} from "@/lib/admin";
+} from "@/lib/queries";
 import type { Course, Branch } from "@/types";
 
 export function CoursesTab() {
@@ -126,10 +126,7 @@ export function CoursesTab() {
       });
       setShowBranchModal(false);
       const branches = await getBranches(branchCourseId);
-      setBranchData((prev) => ({
-        ...prev,
-        [branchCourseId]: branches,
-      }));
+      setBranchData((prev) => ({ ...prev, [branchCourseId]: branches }));
     } catch {
       alert("Failed to add branch.");
     }
@@ -139,10 +136,7 @@ export function CoursesTab() {
     try {
       await deleteBranch(branchId);
       const branches = await getBranches(courseId);
-      setBranchData((prev) => ({
-        ...prev,
-        [courseId]: branches,
-      }));
+      setBranchData((prev) => ({ ...prev, [courseId]: branches }));
     } catch {
       alert("Failed to delete branch.");
     }
