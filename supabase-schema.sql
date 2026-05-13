@@ -81,22 +81,37 @@ CREATE INDEX IF NOT EXISTS idx_branches_course_id ON public.branches("courseId")
 CREATE INDEX IF NOT EXISTS idx_contributions_status ON public.contributions(status);
 CREATE INDEX IF NOT EXISTS idx_resources_type ON public.resources(type);
 
--- Auto-create public.users row on auth signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.users (uid, email, role, "createdAt")
-  VALUES (
-    NEW.id,
-    NEW.email,
-    'student',
-    EXTRACT(EPOCH FROM NOW()) * 1000
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Row Level Security
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.student_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contributions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+-- Users: authenticated can read all; insert/update own row
+CREATE POLICY "users_select" ON public.users FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "users_insert" ON public.users FOR INSERT WITH CHECK (auth.uid() = uid);
+CREATE POLICY "users_update" ON public.users FOR UPDATE USING (auth.uid() = uid OR auth.role() = 'authenticated');
+
+-- Courses & Branches: authenticated can read all
+CREATE POLICY "courses_select" ON public.courses FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "branches_select" ON public.branches FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Student profiles: users manage their own
+CREATE POLICY "sp_select" ON public.student_profiles FOR SELECT USING (auth.uid() = uid);
+CREATE POLICY "sp_insert" ON public.student_profiles FOR INSERT WITH CHECK (auth.uid() = uid);
+CREATE POLICY "sp_update" ON public.student_profiles FOR UPDATE USING (auth.uid() = uid);
+
+-- Contributions: authenticated can read all, insert, update
+CREATE POLICY "contrib_select" ON public.contributions FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "contrib_insert" ON public.contributions FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "contrib_update" ON public.contributions FOR UPDATE USING (auth.role() = 'authenticated');
+
+-- Resources: authenticated can read all
+CREATE POLICY "resources_select" ON public.resources FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Note: No auto-trigger for user creation.
+-- The application creates public.users rows via:
+--   - signUpWithEmail() -> creates with chosen role
+--   - createUserData() -> creates after Google OAuth role selection
