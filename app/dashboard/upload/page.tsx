@@ -10,6 +10,7 @@ import type { UserData, ResourceType } from "@/types";
 
 interface Course { id: string; name: string; code: string; hasBranches: boolean; semesters: number[] }
 interface Branch { id: string; name: string; code: string }
+interface SubjectItem { id: string; name: string; code: string }
 
 const resourceTypes: { value: ResourceType; label: string }[] = [
   { value: "notes", label: "Notes" },
@@ -31,6 +32,7 @@ export default function UploadPage() {
   const [branchId, setBranchId] = useState("");
   const [semesterId, setSemesterId] = useState("");
   const [subject, setSubject] = useState("");
+  const [subjects, setSubjects] = useState<SubjectItem[]>([]);
   const [unit, setUnit] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -66,6 +68,28 @@ export default function UploadPage() {
       setBranchId("");
     })();
   }, [courseId, courses]);
+
+  useEffect(() => {
+    if (!courseId || !semesterId) { setSubjects([]); setSubject(""); return; }
+    const course = courses.find((c) => c.id === courseId);
+    const branch = course?.hasBranches ? branchId : null;
+    if (course?.hasBranches && !branchId) { setSubjects([]); setSubject(""); return; }
+    (async () => {
+      let query = supabase
+        .from("subjects")
+        .select("id, name, code")
+        .eq("courseId", courseId)
+        .eq("semesterId", Number(semesterId));
+      if (branch) {
+        query = query.eq("branchId", branch);
+      } else {
+        query = query.is("branchId", null);
+      }
+      const { data } = await query.order("name", { ascending: true });
+      setSubjects((data || []) as SubjectItem[]);
+      setSubject("");
+    })();
+  }, [courseId, branchId, semesterId, courses]);
 
   const selectedCourse = courses.find((c) => c.id === courseId);
 
@@ -196,8 +220,22 @@ export default function UploadPage() {
           </div>
         </div>
 
-        <Input label="Subject *" value={subject} onChange={(e) => setSubject(e.target.value)}
-          placeholder="e.g. Data Structures" required />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-text-primary">Subject *</label>
+          {subjects.length === 0 && courseId && semesterId ? (
+            <p className="text-xs text-text-tertiary">
+              No subjects added yet for this selection. Ask an admin to add subjects via the Admin Panel → Courses.
+            </p>
+          ) : (
+            <select value={subject} onChange={(e) => setSubject(e.target.value)} required
+              className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
+              <option value="" disabled>Select subject</option>
+              {subjects.map((s) => (
+                <option key={s.id} value={s.name}>{s.name} ({s.code})</option>
+              ))}
+            </select>
+          )}
+        </div>
 
         <Input label="Title *" value={title} onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Unit 1 - Arrays and Linked Lists" required />

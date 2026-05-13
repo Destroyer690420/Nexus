@@ -170,6 +170,54 @@ export async function deleteBranch(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// ─── Subjects ───────────────────────────────────────────
+
+export async function getSubjects(
+  courseId: string,
+  branchId: string | null,
+  semesterId: number
+): Promise<{ id: string; name: string; code: string }[]> {
+  let query = supabase
+    .from("subjects")
+    .select("id, name, code")
+    .eq("courseId", courseId)
+    .eq("semesterId", semesterId);
+
+  if (branchId) {
+    query = query.eq("branchId", branchId);
+  } else {
+    query = query.is("branchId", null);
+  }
+
+  const { data } = await query.order("name", { ascending: true });
+  return (data || []) as { id: string; name: string; code: string }[];
+}
+
+export async function createSubject(
+  courseId: string,
+  branchId: string | null,
+  semesterId: number,
+  name: string,
+  code: string
+): Promise<string> {
+  const id = `${courseId}_${branchId || "common"}_${semesterId}_${code.toLowerCase()}`;
+  const { error } = await supabase.from("subjects").upsert({
+    id,
+    courseId,
+    branchId,
+    semesterId,
+    name,
+    code: code.toUpperCase(),
+  });
+  if (error) throw error;
+  return id;
+}
+
+export async function deleteSubject(id: string): Promise<void> {
+  const { error } = await supabase.from("subjects").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ─── Contributions / Content Queue ─────────────────────
 
 export async function getPendingContributions(): Promise<Contribution[]> {
