@@ -61,6 +61,26 @@ CREATE POLICY "contrib_select" ON public.contributions FOR SELECT USING (auth.ro
 CREATE POLICY "contrib_insert" ON public.contributions FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 CREATE POLICY "contrib_update" ON public.contributions FOR UPDATE USING (auth.role() = 'authenticated');
 
--- Resources
+-- Subjects
+DROP POLICY IF EXISTS "subjects_select" ON public.subjects;
+DROP POLICY IF EXISTS "subjects_insert" ON public.subjects;
+DROP POLICY IF EXISTS "subjects_delete" ON public.subjects;
+CREATE POLICY "subjects_select" ON public.subjects FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "subjects_insert" ON public.subjects FOR INSERT WITH CHECK (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+);
+CREATE POLICY "subjects_delete" ON public.subjects FOR DELETE USING (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+);
+
+-- Resources: authenticated can read all; faculty/admin can write
 DROP POLICY IF EXISTS "resources_select" ON public.resources;
+DROP POLICY IF EXISTS "resources_insert" ON public.resources;
+DROP POLICY IF EXISTS "resources_delete" ON public.resources;
 CREATE POLICY "resources_select" ON public.resources FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "resources_insert" ON public.resources FOR INSERT WITH CHECK (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+);
+CREATE POLICY "resources_delete" ON public.resources FOR DELETE USING (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+);

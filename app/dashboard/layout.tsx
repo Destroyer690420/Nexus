@@ -60,6 +60,20 @@ export default function DashboardLayout({
             active={pathname === "/dashboard"}
             label="Home"
           />
+          {userData?.role === "student" && (
+            <NavItem
+              href="/dashboard/notes"
+              active={pathname.startsWith("/dashboard/notes")}
+              label="Notes"
+            />
+          )}
+          {userData?.role !== "student" && (
+            <NavItem
+              href="/dashboard/upload"
+              active={pathname.startsWith("/dashboard/upload")}
+              label="Upload"
+            />
+          )}
           <NavItem
             href="/dashboard/profile"
             active={pathname.startsWith("/dashboard/profile")}

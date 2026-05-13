@@ -58,6 +58,16 @@ CREATE TABLE IF NOT EXISTS public.contributions (
   "rejectReason" TEXT DEFAULT ''
 );
 
+-- Subjects
+CREATE TABLE IF NOT EXISTS public.subjects (
+  id TEXT PRIMARY KEY,
+  "courseId" TEXT NOT NULL,
+  "branchId" TEXT,
+  "semesterId" INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  code TEXT NOT NULL
+);
+
 -- Resources (polymorphic: notes, pyqs, assignments, lab_manuals, others)
 CREATE TABLE IF NOT EXISTS public.resources (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -80,6 +90,7 @@ CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
 CREATE INDEX IF NOT EXISTS idx_branches_course_id ON public.branches("courseId");
 CREATE INDEX IF NOT EXISTS idx_contributions_status ON public.contributions(status);
 CREATE INDEX IF NOT EXISTS idx_resources_type ON public.resources(type);
+CREATE INDEX IF NOT EXISTS idx_subjects_course ON public.subjects("courseId", "semesterId");
 
 -- Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -141,9 +152,29 @@ CREATE POLICY "contrib_select" ON public.contributions FOR SELECT USING (auth.ro
 CREATE POLICY "contrib_insert" ON public.contributions FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 CREATE POLICY "contrib_update" ON public.contributions FOR UPDATE USING (auth.role() = 'authenticated');
 
--- Resources: authenticated can read all
+-- Subjects: authenticated can read all; admin can write
+DROP POLICY IF EXISTS "subjects_select" ON public.subjects;
+DROP POLICY IF EXISTS "subjects_insert" ON public.subjects;
+DROP POLICY IF EXISTS "subjects_delete" ON public.subjects;
+CREATE POLICY "subjects_select" ON public.subjects FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "subjects_insert" ON public.subjects FOR INSERT WITH CHECK (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+);
+CREATE POLICY "subjects_delete" ON public.subjects FOR DELETE USING (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) = 'admin'
+);
+
+-- Resources: authenticated can read all; faculty/admin can insert
 DROP POLICY IF EXISTS "resources_select" ON public.resources;
+DROP POLICY IF EXISTS "resources_insert" ON public.resources;
+DROP POLICY IF EXISTS "resources_delete" ON public.resources;
 CREATE POLICY "resources_select" ON public.resources FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "resources_insert" ON public.resources FOR INSERT WITH CHECK (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+);
+CREATE POLICY "resources_delete" ON public.resources FOR DELETE USING (
+  (SELECT role FROM public.users WHERE uid = auth.uid()) IN ('admin', 'faculty')
+);
 
 -- Note: No auto-trigger for user creation.
 -- The application creates public.users rows via:
