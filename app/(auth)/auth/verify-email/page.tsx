@@ -101,11 +101,16 @@ export default function VerifyEmailPage() {
           </svg>
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
-          Check your email
+          Verify your email
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          We sent a verification link to{" "}
+          We sent a confirmation link to{" "}
           <span className="font-medium text-text-primary">{email}</span>
+        </p>
+        <p className="mt-3 rounded-md border border-border bg-surface px-4 py-3 text-sm text-text-secondary">
+          Open your email inbox, find the message from Academia OS, and click
+          the <strong className="text-text-primary">Confirm</strong> button to
+          activate your account.
         </p>
       </div>
 

@@ -13,27 +13,6 @@ function mapUser(row: Record<string, unknown> | null): UserData | null {
   };
 }
 
-async function createUserViaApi(
-  uid: string,
-  email: string,
-  role: UserRole
-) {
-  const token = await getSessionToken();
-  if (!token) throw new Error("Not authenticated");
-  const res = await fetch("/api/auth/create-user", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ uid, email, role }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || "Failed to create user");
-  }
-}
-
 export async function signUpWithEmail(
   email: string,
   password: string,
@@ -43,8 +22,17 @@ export async function signUpWithEmail(
   if (error) throw error;
   if (!data.user) throw new Error("Signup failed");
 
-  // Bypass RLS via API route since auth session may not be active yet
-  await createUserViaApi(data.user.id, data.user.email || email, role);
+  const { error: dbError } = await supabase.from("users").upsert(
+    {
+      uid: data.user.id,
+      email: data.user.email,
+      role,
+      approved: role === "faculty" ? false : null,
+      createdAt: Date.now(),
+    },
+    { onConflict: "uid" }
+  );
+  if (dbError) throw dbError;
 
   return data.user;
 }
@@ -98,18 +86,10 @@ export async function createUserData(
     approved: role === "faculty" ? false : null,
     createdAt: Date.now(),
   };
-
-  // Bypass RLS via API route
-  try {
-    await createUserViaApi(uid, email, role);
-  } catch {
-    // Fallback to direct upsert (works when session is active)
-    const { error } = await supabase.from("users").upsert(data, {
-      onConflict: "uid",
-    });
-    if (error) throw error;
-  }
-
+  const { error } = await supabase.from("users").upsert(data, {
+    onConflict: "uid",
+  });
+  if (error) throw error;
   return mapUser(data);
 }
 

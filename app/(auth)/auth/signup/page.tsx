@@ -104,6 +104,13 @@ export default function SignupPage() {
           </div>
         </div>
 
+        <div className="rounded-md border border-border bg-surface px-3 py-2.5">
+          <p className="text-xs text-text-secondary text-center">
+            After signing up, check your email inbox and click the confirmation
+            link to verify your account.
+          </p>
+        </div>
+
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <Button type="submit" loading={loading} className="w-full h-11">
