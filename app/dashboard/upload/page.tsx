@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button, Input, Card } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
-import { uploadFile } from "@/lib/upload";
 import type { UserData, ResourceType } from "@/types";
 
 interface Course { id: string; name: string; code: string; hasBranches: boolean; semesters: number[] }
@@ -104,34 +103,26 @@ export default function UploadPage() {
     setSuccess("");
 
     try {
-      let fileUrl = "";
-      if (file) {
-        const path = `resources/${userData?.uid}/${Date.now()}`;
-        fileUrl = await uploadFile(file, path);
-      }
-
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Not authenticated");
 
+      const formData = new FormData();
+      formData.append("type", type);
+      formData.append("title", title);
+      formData.append("description", description || "");
+      formData.append("courseId", courseId);
+      formData.append("branchId", branchId || "");
+      formData.append("semesterId", String(semesterId));
+      formData.append("subjectId", subject);
+      formData.append("unit", unit || "");
+      formData.append("tags", tags);
+      if (file) formData.append("file", file);
+
       const res = await fetch("/api/resources/create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          type,
-          title,
-          description: description || "",
-          courseId,
-          branchId: branchId || null,
-          semesterId: Number(semesterId),
-          subjectId: subject,
-          unit: unit ? Number(unit) : null,
-          fileUrl,
-          tags: tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
-        }),
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
 
       if (!res.ok) {

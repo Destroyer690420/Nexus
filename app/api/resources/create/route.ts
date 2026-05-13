@@ -21,28 +21,65 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (!caller || (caller.role !== "admin" && caller.role !== "faculty")) {
-      return NextResponse.json({ error: "Forbidden: admin or faculty only" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const body = await req.json();
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+    const type = formData.get("type") as string;
+    const title = formData.get("title") as string;
+    const description = (formData.get("description") as string) || "";
+    const courseId = formData.get("courseId") as string;
+    const branchId = (formData.get("branchId") as string) || null;
+    const semesterId = Number(formData.get("semesterId"));
+    const subjectId = (formData.get("subjectId") as string) || "";
+    const unit = formData.get("unit") ? Number(formData.get("unit")) : null;
+    const tagsStr = (formData.get("tags") as string) || "";
+    const tags = tagsStr ? tagsStr.split(",").map((t: string) => t.trim()).filter(Boolean) : [];
+
+    let fileUrl = "";
+
+    if (file && file.size > 0) {
+      const ext = file.name.split(".").pop();
+      const fileName = `uploads/${user.id}/${Date.now()}_${crypto.randomUUID()}.${ext}`;
+
+      const { error: bucketError } = await supabaseAdmin.storage.createBucket("resources", {
+        public: true,
+      });
+
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from("resources")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) {
+        return NextResponse.json({ error: `Storage upload failed: ${uploadError.message}` }, { status: 500 });
+      }
+
+      const { data: urlData } = supabaseAdmin.storage
+        .from("resources")
+        .getPublicUrl(fileName);
+
+      fileUrl = urlData.publicUrl;
+    }
+
     const { error: insertError } = await supabaseAdmin.from("resources").insert({
-      type: body.type,
-      title: body.title,
-      description: body.description || "",
-      courseId: body.courseId,
-      branchId: body.branchId || null,
-      semesterId: body.semesterId,
-      subjectId: body.subjectId || "",
-      unit: body.unit || null,
-      fileUrl: body.fileUrl || "",
-      tags: body.tags || [],
+      type,
+      title,
+      description,
+      courseId,
+      branchId,
+      semesterId,
+      subjectId,
+      unit,
+      fileUrl,
+      tags,
       createdBy: user.id,
       createdAt: Date.now(),
     });
 
     if (insertError) throw insertError;
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, fileUrl });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal error";
     return NextResponse.json({ error: message }, { status: 500 });
