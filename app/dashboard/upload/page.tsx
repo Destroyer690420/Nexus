@@ -110,22 +110,34 @@ export default function UploadPage() {
         fileUrl = await uploadFile(file, path);
       }
 
-      const { error: dbError } = await supabase.from("resources").insert({
-        type,
-        title,
-        description: description || "",
-        courseId,
-        branchId: branchId || null,
-        semesterId: Number(semesterId),
-        subjectId: subject,
-        unit: unit ? Number(unit) : null,
-        fileUrl,
-        tags: tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
-        createdBy: userData?.uid || "",
-        createdAt: Date.now(),
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Not authenticated");
+
+      const res = await fetch("/api/resources/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          type,
+          title,
+          description: description || "",
+          courseId,
+          branchId: branchId || null,
+          semesterId: Number(semesterId),
+          subjectId: subject,
+          unit: unit ? Number(unit) : null,
+          fileUrl,
+          tags: tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+        }),
       });
 
-      if (dbError) throw dbError;
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Upload failed");
+      }
 
       setSuccess(`${title} uploaded successfully!`);
       setTitle("");
