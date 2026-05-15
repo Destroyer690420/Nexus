@@ -626,3 +626,45 @@ export async function deleteAnnouncement(id: string): Promise<void> {
     .eq("id", id);
   if (error) throw error;
 }
+
+// ─── Search ─────────────────────────────────────────────
+
+export async function searchResources(query: string, limit = 20): Promise<Resource[]> {
+  const { data } = await supabase
+    .from("resources")
+    .select("*")
+    .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+    .limit(limit)
+    .order("createdAt", { ascending: false });
+  return (data || []).map((r) => mapResource(r as unknown as Record<string, unknown>));
+}
+
+export async function searchAssignments(query: string, limit = 20): Promise<Assignment[]> {
+  const { data } = await supabase
+    .from("assignments")
+    .select("*")
+    .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+    .limit(limit)
+    .order("createdAt", { ascending: false });
+  return (data || []).map((r) => mapAssignment(r as unknown as Record<string, unknown>));
+}
+
+export async function searchSubjects(query: string, limit = 20): Promise<{ id: string; name: string; code: string; courseId: string; semesterId: number }[]> {
+  const { data } = await supabase
+    .from("subjects")
+    .select("id, name, code, courseId, semesterId")
+    .or(`name.ilike.%${query}%,code.ilike.%${query}%`)
+    .limit(limit)
+    .order("name", { ascending: true });
+  return (data || []) as { id: string; name: string; code: string; courseId: string; semesterId: number }[];
+}
+
+export async function searchAnnouncements(query: string, limit = 20): Promise<Announcement[]> {
+  const { data } = await supabase
+    .from("announcements")
+    .select("*")
+    .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
+    .limit(limit)
+    .order("createdAt", { ascending: false });
+  return (data || []).map((r) => mapAnnouncement(r as unknown as Record<string, unknown>));
+}

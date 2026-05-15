@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
+import { SearchBar } from "@/components/ui/SearchBar";
 import type { UserData } from "@/types";
 
 export default function DashboardLayout({
@@ -53,6 +54,9 @@ export default function DashboardLayout({
           <h2 className="text-base font-semibold text-text-primary tracking-tight">
             Academia OS
           </h2>
+          <div className="mt-3">
+            <SearchBar />
+          </div>
         </div>
         <nav className="p-3 flex flex-col gap-1">
           <NavItem
