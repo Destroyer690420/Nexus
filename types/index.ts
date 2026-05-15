@@ -61,3 +61,33 @@ export interface Branch {
   name: string;
   code: string;
 }
+
+export interface Assignment {
+  id: string;
+  title: string;
+  description?: string;
+  courseId: string;
+  branchId?: string | null;
+  semesterId: number;
+  subjectId: string;
+  fileUrl?: string;
+  dueDate: number;
+  maxMarks?: number | null;
+  allowLate: boolean;
+  createdBy: string;
+  createdAt: number;
+}
+
+export interface Submission {
+  id: string;
+  assignmentId: string;
+  studentId: string;
+  studentEmail?: string;
+  fileUrl?: string;
+  status: "pending" | "submitted" | "late";
+  submittedAt?: number | null;
+  grade?: string | null;
+  feedback?: string;
+  gradedBy?: string | null;
+  gradedAt?: number | null;
+}

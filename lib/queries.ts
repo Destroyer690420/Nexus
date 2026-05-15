@@ -7,6 +7,8 @@ import type {
   Branch,
   ResourceType,
   UserRole,
+  Assignment,
+  Submission,
 } from "@/types";
 
 type Row<T> = T;
@@ -78,6 +80,40 @@ function mapResource(row: Record<string, unknown>): Resource {
     tags: row.tags as string[],
     createdBy: row.createdBy as string,
     createdAt: row.createdAt as number,
+  };
+}
+
+function mapAssignment(row: Record<string, unknown>): Assignment {
+  return {
+    id: row.id as string,
+    title: row.title as string,
+    description: row.description as string,
+    courseId: row.courseId as string,
+    branchId: row.branchId as string | null,
+    semesterId: row.semesterId as number,
+    subjectId: row.subjectId as string,
+    fileUrl: row.fileUrl as string,
+    dueDate: row.dueDate as number,
+    maxMarks: row.maxMarks as number | null,
+    allowLate: row.allowLate as boolean,
+    createdBy: row.createdBy as string,
+    createdAt: row.createdAt as number,
+  };
+}
+
+function mapSubmission(row: Record<string, unknown>): Submission {
+  return {
+    id: row.id as string,
+    assignmentId: row.assignmentId as string,
+    studentId: row.studentId as string,
+    studentEmail: row.studentEmail as string | undefined,
+    fileUrl: row.fileUrl as string,
+    status: row.status as "pending" | "submitted" | "late",
+    submittedAt: row.submittedAt as number | null,
+    grade: row.grade as string | null,
+    feedback: row.feedback as string,
+    gradedBy: row.gradedBy as string | null,
+    gradedAt: row.gradedAt as number | null,
   };
 }
 
@@ -218,6 +254,49 @@ export async function deleteSubject(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// ─── Assignments ────────────────────────────────────────
+
+export async function getAssignmentsForStudent(
+  courseId: string,
+  branchId: string | null,
+  semesterId: number
+): Promise<Assignment[]> {
+  let query = supabase
+    .from("assignments")
+    .select("*")
+    .eq("courseId", courseId)
+    .eq("semesterId", semesterId)
+    .order("dueDate", { ascending: true });
+
+  if (branchId) {
+    query = query.eq("branchId", branchId);
+  } else {
+    query = query.is("branchId", null);
+  }
+
+  const { data } = await query;
+  return (data || []).map((r) => mapAssignment(r as unknown as Record<string, unknown>));
+}
+
+export async function getAllAssignments(): Promise<Assignment[]> {
+  const { data } = await supabase
+    .from("assignments")
+    .select("*")
+    .order("createdAt", { ascending: false });
+  return (data || []).map((r) => mapAssignment(r as unknown as Record<string, unknown>));
+}
+
+export async function getAssignmentsByFaculty(
+  facultyId: string
+): Promise<Assignment[]> {
+  const { data } = await supabase
+    .from("assignments")
+    .select("*")
+    .eq("createdBy", facultyId)
+    .order("createdAt", { ascending: false });
+  return (data || []).map((r) => mapAssignment(r as unknown as Record<string, unknown>));
+}
+
 // ─── Submissions ────────────────────────────────────────
 
 export async function getSubmission(
@@ -233,6 +312,20 @@ export async function getSubmission(
   return data as { id: string; status: string; fileUrl: string } | null;
 }
 
+export async function getFullSubmission(
+  assignmentId: string,
+  studentId: string
+): Promise<Submission | null> {
+  const { data } = await supabase
+    .from("submissions")
+    .select("*")
+    .eq("assignmentId", assignmentId)
+    .eq("studentId", studentId)
+    .maybeSingle();
+  if (!data) return null;
+  return mapSubmission(data as unknown as Record<string, unknown>);
+}
+
 export async function upsertSubmission(
   assignmentId: string,
   studentId: string,
@@ -246,7 +339,7 @@ export async function upsertSubmission(
       .update({
         status,
         fileUrl: fileUrl || existing.fileUrl,
-        submittedAt: status === "submitted" ? Date.now() : null,
+        submittedAt: status === "submitted" || status === "late" ? Date.now() : null,
       })
       .eq("id", existing.id);
   } else {
@@ -255,9 +348,54 @@ export async function upsertSubmission(
       studentId,
       status,
       fileUrl: fileUrl || "",
-      submittedAt: status === "submitted" ? Date.now() : null,
+      submittedAt: status === "submitted" || status === "late" ? Date.now() : null,
     });
   }
+}
+
+export async function getSubmissionsForAssignment(
+  assignmentId: string
+): Promise<Submission[]> {
+  const { data } = await supabase
+    .from("submissions")
+    .select("*")
+    .eq("assignmentId", assignmentId)
+    .order("submittedAt", { ascending: false });
+  return (data || []).map((r) => mapSubmission(r as unknown as Record<string, unknown>));
+}
+
+export async function getSubmissionsByStudent(
+  studentId: string
+): Promise<Submission[]> {
+  const { data } = await supabase
+    .from("submissions")
+    .select("*")
+    .eq("studentId", studentId)
+    .order("submittedAt", { ascending: false });
+  return (data || []).map((r) => mapSubmission(r as unknown as Record<string, unknown>));
+}
+
+export async function gradeSubmission(
+  submissionId: string,
+  grade: string | null,
+  feedback: string,
+  gradedBy: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("submissions")
+    .update({
+      grade,
+      feedback,
+      gradedBy,
+      gradedAt: Date.now(),
+    })
+    .eq("id", submissionId);
+  if (error) throw error;
+}
+
+export async function deleteSubmission(id: string): Promise<void> {
+  const { error } = await supabase.from("submissions").delete().eq("id", id);
+  if (error) throw error;
 }
 
 // ─── Contributions / Content Queue ─────────────────────
@@ -333,6 +471,15 @@ export async function rejectContribution(
     })
     .eq("id", id);
   if (error) throw error;
+}
+
+export async function getMyContributions(uid: string): Promise<Contribution[]> {
+  const { data } = await supabase
+    .from("contributions")
+    .select("*")
+    .eq("contributedBy", uid)
+    .order("createdAt", { ascending: false });
+  return (data || []).map((r) => mapContribution(r as unknown as Record<string, unknown>));
 }
 
 // ─── Resources ─────────────────────────────────────────

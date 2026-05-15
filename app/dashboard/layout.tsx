@@ -66,14 +66,28 @@ export default function DashboardLayout({
               <NavItem href="/dashboard/pyqs" active={pathname.startsWith("/dashboard/pyqs")} label="PYQs" />
               <NavItem href="/dashboard/assignments" active={pathname.startsWith("/dashboard/assignments")} label="Assignments" />
               <NavItem href="/dashboard/lab-manuals" active={pathname.startsWith("/dashboard/lab-manuals")} label="Lab Manuals" />
+              <NavItem href="/dashboard/contribute" active={pathname.startsWith("/dashboard/contribute")} label="Contribute" />
+              <NavItem href="/dashboard/my-contributions" active={pathname.startsWith("/dashboard/my-contributions")} label="My Contributions" />
             </>
           )}
           {userData?.role !== "student" && (
-            <NavItem
-              href="/dashboard/upload"
-              active={pathname.startsWith("/dashboard/upload")}
-              label="Upload"
-            />
+            <>
+              <NavItem
+                href="/dashboard/upload"
+                active={pathname.startsWith("/dashboard/upload")}
+                label="Upload"
+              />
+              <NavItem
+                href="/dashboard/assignments/create"
+                active={pathname.startsWith("/dashboard/assignments/create")}
+                label="Create Assignment"
+              />
+              <NavItem
+                href="/dashboard/submissions"
+                active={pathname.startsWith("/dashboard/submissions")}
+                label="Submissions"
+              />
+            </>
           )}
           <NavItem
             href="/dashboard/profile"

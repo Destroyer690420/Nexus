@@ -55,7 +55,8 @@ CREATE TABLE IF NOT EXISTS public.contributions (
   "createdAt" BIGINT NOT NULL,
   "approvedBy" UUID DEFAULT NULL,
   "approvedAt" BIGINT DEFAULT NULL,
-  "rejectReason" TEXT DEFAULT ''
+  "rejectReason" TEXT DEFAULT '',
+  "rejectedAt" BIGINT DEFAULT NULL
 );
 
 -- Subjects
@@ -75,7 +76,28 @@ CREATE TABLE IF NOT EXISTS public.submissions (
   "studentId" UUID NOT NULL,
   "fileUrl" TEXT DEFAULT '',
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'submitted', 'late')),
-  "submittedAt" BIGINT DEFAULT NULL
+  "submittedAt" BIGINT DEFAULT NULL,
+  grade TEXT DEFAULT NULL,
+  feedback TEXT DEFAULT '',
+  "gradedBy" UUID DEFAULT NULL,
+  "gradedAt" BIGINT DEFAULT NULL
+);
+
+-- Assignments (dedicated table with due dates, max marks, etc.)
+CREATE TABLE IF NOT EXISTS public.assignments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  "courseId" TEXT NOT NULL,
+  "branchId" TEXT DEFAULT NULL,
+  "semesterId" INTEGER NOT NULL,
+  "subjectId" TEXT NOT NULL,
+  "fileUrl" TEXT DEFAULT '',
+  "dueDate" BIGINT NOT NULL,
+  "maxMarks" INTEGER DEFAULT NULL,
+  "allowLate" BOOLEAN DEFAULT false,
+  "createdBy" UUID NOT NULL,
+  "createdAt" BIGINT NOT NULL
 );
 
 -- Resources (polymorphic: notes, pyqs, assignments, lab_manuals, others)
@@ -102,6 +124,8 @@ CREATE INDEX IF NOT EXISTS idx_contributions_status ON public.contributions(stat
 CREATE INDEX IF NOT EXISTS idx_resources_type ON public.resources(type);
 CREATE INDEX IF NOT EXISTS idx_subjects_course ON public.subjects("courseId", "semesterId");
 CREATE INDEX IF NOT EXISTS idx_submissions_student ON public.submissions("studentId");
+CREATE INDEX IF NOT EXISTS idx_assignments_course ON public.assignments("courseId", "semesterId");
+CREATE INDEX IF NOT EXISTS idx_assignments_due ON public.assignments("dueDate");
 
 -- Helper function: returns the current user's role (bypasses RLS via SECURITY DEFINER)
 CREATE OR REPLACE FUNCTION public.get_user_role()
@@ -120,6 +144,7 @@ ALTER TABLE public.contributions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
 
 -- Users: authenticated can read all; insert/update own row
 DROP POLICY IF EXISTS "users_select" ON public.users;
@@ -185,7 +210,7 @@ CREATE POLICY "subjects_delete" ON public.subjects FOR DELETE USING (
   public.get_user_role() = 'admin'
 );
 
--- Submissions: students manage their own; faculty/admin can read all
+-- Submissions: students manage their own; faculty/admin can read all and grade
 DROP POLICY IF EXISTS "submissions_select" ON public.submissions;
 DROP POLICY IF EXISTS "submissions_insert" ON public.submissions;
 DROP POLICY IF EXISTS "submissions_update" ON public.submissions;
@@ -193,7 +218,25 @@ CREATE POLICY "submissions_select" ON public.submissions FOR SELECT USING (
   auth.uid() = "studentId" OR public.get_user_role() IN ('admin', 'faculty')
 );
 CREATE POLICY "submissions_insert" ON public.submissions FOR INSERT WITH CHECK (auth.uid() = "studentId");
-CREATE POLICY "submissions_update" ON public.submissions FOR UPDATE USING (auth.uid() = "studentId");
+CREATE POLICY "submissions_update" ON public.submissions FOR UPDATE USING (
+  auth.uid() = "studentId" OR public.get_user_role() IN ('admin', 'faculty')
+);
+
+-- Assignments: authenticated can read all; faculty/admin can write
+DROP POLICY IF EXISTS "assignments_select" ON public.assignments;
+DROP POLICY IF EXISTS "assignments_insert" ON public.assignments;
+DROP POLICY IF EXISTS "assignments_update" ON public.assignments;
+DROP POLICY IF EXISTS "assignments_delete" ON public.assignments;
+CREATE POLICY "assignments_select" ON public.assignments FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "assignments_insert" ON public.assignments FOR INSERT WITH CHECK (
+  public.get_user_role() IN ('admin', 'faculty')
+);
+CREATE POLICY "assignments_update" ON public.assignments FOR UPDATE USING (
+  public.get_user_role() IN ('admin', 'faculty')
+);
+CREATE POLICY "assignments_delete" ON public.assignments FOR DELETE USING (
+  public.get_user_role() IN ('admin', 'faculty')
+);
 
 -- Resources: authenticated can read all; faculty/admin can insert
 DROP POLICY IF EXISTS "resources_select" ON public.resources;

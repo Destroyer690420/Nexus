@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
+import { getAssignmentsForStudent } from "@/lib/queries";
 import type { UserData } from "@/types";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [upcoming, setUpcoming] = useState<{ id: string; title: string; dueDate: number; subjectId: string }[]>([]);
 
   useEffect(() => {
     const unsub = onAuthChange(async (user) => {
@@ -33,6 +35,15 @@ export default function DashboardPage() {
           router.replace("/onboarding");
           return;
         }
+        const p = profile as { courseId: string; branchId: string | null; semesterId: number };
+        const assignments = await getAssignmentsForStudent(p.courseId, p.branchId, p.semesterId);
+        const now = Date.now();
+        const upcomingAssignments = assignments
+          .filter((a) => a.dueDate > now)
+          .sort((a, b) => a.dueDate - b.dueDate)
+          .slice(0, 3)
+          .map((a) => ({ id: a.id, title: a.title, dueDate: a.dueDate, subjectId: a.subjectId }));
+        setUpcoming(upcomingAssignments);
       }
     });
     return unsub;
@@ -76,6 +87,27 @@ export default function DashboardPage() {
                 : "Browse notes, PYQs, and assignments filtered for your course."}
           </p>
         </div>
+
+        {userData.role === "student" && upcoming.length > 0 && (
+          <div className="rounded-lg border border-border bg-white p-5">
+            <h3 className="text-sm font-medium text-text-primary">
+              Upcoming Deadlines
+            </h3>
+            <div className="mt-3 flex flex-col gap-2">
+              {upcoming.map((a) => (
+                <div key={a.id} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-text-primary">{a.title}</p>
+                    <p className="text-xs text-text-tertiary">{a.subjectId}</p>
+                  </div>
+                  <span className="text-xs text-text-tertiary">
+                    {new Date(a.dueDate).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
