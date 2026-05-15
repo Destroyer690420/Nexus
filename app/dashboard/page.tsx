@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
-import { getAssignmentsForStudent } from "@/lib/queries";
-import type { UserData } from "@/types";
+import { getAssignmentsForStudent, getAnnouncements } from "@/lib/queries";
+import type { UserData, Announcement } from "@/types";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [upcoming, setUpcoming] = useState<{ id: string; title: string; dueDate: number; subjectId: string }[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   useEffect(() => {
     const unsub = onAuthChange(async (user) => {
@@ -45,6 +46,9 @@ export default function DashboardPage() {
           .map((a) => ({ id: a.id, title: a.title, dueDate: a.dueDate, subjectId: a.subjectId }));
         setUpcoming(upcomingAssignments);
       }
+
+      const ann = await getAnnouncements();
+      setAnnouncements(ann.slice(0, 3));
     });
     return unsub;
   }, [router]);
@@ -103,6 +107,40 @@ export default function DashboardPage() {
                   <span className="text-xs text-text-tertiary">
                     {new Date(a.dueDate).toLocaleDateString()}
                   </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {announcements.length > 0 && (
+          <div className="rounded-lg border border-border bg-white p-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-text-primary">
+                Announcements
+              </h3>
+              <button
+                onClick={() => router.push("/dashboard/announcements")}
+                className="text-xs text-accent hover:underline"
+              >
+                View all
+              </button>
+            </div>
+            <div className="mt-3 flex flex-col gap-3">
+              {announcements.map((a) => (
+                <div key={a.id} className="border-b border-border-light pb-3 last:border-0 last:pb-0">
+                  <div className="flex items-center gap-2">
+                    {a.pinned && (
+                      <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                        Pinned
+                      </span>
+                    )}
+                    <p className="text-sm font-medium text-text-primary">{a.title}</p>
+                  </div>
+                  <p className="text-xs text-text-secondary mt-1 line-clamp-2">{a.content}</p>
+                  <p className="text-xs text-text-tertiary mt-1">
+                    {new Date(a.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
               ))}
             </div>

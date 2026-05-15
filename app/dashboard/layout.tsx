@@ -70,6 +70,7 @@ export default function DashboardLayout({
               <NavItem href="/dashboard/my-contributions" active={pathname.startsWith("/dashboard/my-contributions")} label="My Contributions" />
             </>
           )}
+          <NavItem href="/dashboard/announcements" active={pathname.startsWith("/dashboard/announcements")} label="Announcements" />
           {userData?.role !== "student" && (
             <>
               <NavItem

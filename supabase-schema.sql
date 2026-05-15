@@ -117,6 +117,17 @@ CREATE TABLE IF NOT EXISTS public.resources (
   "createdAt" BIGINT NOT NULL
 );
 
+-- Announcements
+CREATE TABLE IF NOT EXISTS public.announcements (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  "createdBy" UUID NOT NULL,
+  "createdAt" BIGINT NOT NULL,
+  "targetRole" TEXT DEFAULT 'all' CHECK ("targetRole" IN ('all', 'student', 'faculty')),
+  pinned BOOLEAN DEFAULT false
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
 CREATE INDEX IF NOT EXISTS idx_branches_course_id ON public.branches("courseId");
@@ -126,6 +137,7 @@ CREATE INDEX IF NOT EXISTS idx_subjects_course ON public.subjects("courseId", "s
 CREATE INDEX IF NOT EXISTS idx_submissions_student ON public.submissions("studentId");
 CREATE INDEX IF NOT EXISTS idx_assignments_course ON public.assignments("courseId", "semesterId");
 CREATE INDEX IF NOT EXISTS idx_assignments_due ON public.assignments("dueDate");
+CREATE INDEX IF NOT EXISTS idx_announcements_created ON public.announcements("createdAt");
 
 -- Helper function: returns the current user's role (bypasses RLS via SECURITY DEFINER)
 CREATE OR REPLACE FUNCTION public.get_user_role()
@@ -145,6 +157,7 @@ ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 
 -- Users: authenticated can read all; insert/update own row
 DROP POLICY IF EXISTS "users_select" ON public.users;
@@ -236,6 +249,29 @@ CREATE POLICY "assignments_update" ON public.assignments FOR UPDATE USING (
 );
 CREATE POLICY "assignments_delete" ON public.assignments FOR DELETE USING (
   public.get_user_role() IN ('admin', 'faculty')
+);
+
+-- Announcements: authenticated can read (filtered by targetRole); faculty/admin can write
+DROP POLICY IF EXISTS "announcements_select" ON public.announcements;
+DROP POLICY IF EXISTS "announcements_insert" ON public.announcements;
+DROP POLICY IF EXISTS "announcements_update" ON public.announcements;
+DROP POLICY IF EXISTS "announcements_delete" ON public.announcements;
+CREATE POLICY "announcements_select" ON public.announcements FOR SELECT USING (
+  auth.role() = 'authenticated' AND (
+    "targetRole" = 'all' OR
+    "targetRole" = public.get_user_role()
+  )
+);
+CREATE POLICY "announcements_insert" ON public.announcements FOR INSERT WITH CHECK (
+  public.get_user_role() IN ('admin', 'faculty')
+);
+CREATE POLICY "announcements_update" ON public.announcements FOR UPDATE USING (
+  public.get_user_role() IN ('admin', 'faculty')
+);
+CREATE POLICY "announcements_delete" ON public.announcements FOR DELETE USING (
+  public.get_user_role() = 'admin' OR (
+    public.get_user_role() = 'faculty' AND auth.uid() = "createdBy"
+  )
 );
 
 -- Resources: authenticated can read all; faculty/admin can insert

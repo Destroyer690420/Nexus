@@ -91,3 +91,13 @@ export interface Submission {
   gradedBy?: string | null;
   gradedAt?: number | null;
 }
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  createdBy: string;
+  createdAt: number;
+  targetRole: "all" | "student" | "faculty";
+  pinned: boolean;
+}

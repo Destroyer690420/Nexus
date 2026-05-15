@@ -9,6 +9,7 @@ import type {
   UserRole,
   Assignment,
   Submission,
+  Announcement,
 } from "@/types";
 
 type Row<T> = T;
@@ -114,6 +115,18 @@ function mapSubmission(row: Record<string, unknown>): Submission {
     feedback: row.feedback as string,
     gradedBy: row.gradedBy as string | null,
     gradedAt: row.gradedAt as number | null,
+  };
+}
+
+function mapAnnouncement(row: Record<string, unknown>): Announcement {
+  return {
+    id: row.id as string,
+    title: row.title as string,
+    content: row.content as string,
+    createdBy: row.createdBy as string,
+    createdAt: row.createdAt as number,
+    targetRole: row.targetRole as "all" | "student" | "faculty",
+    pinned: row.pinned as boolean,
   };
 }
 
@@ -575,4 +588,41 @@ export async function getAdminStats() {
     pendingContributions: pendingContributions || 0,
     totalResources: totalResources || 0,
   };
+}
+
+// ─── Announcements ─────────────────────────────────────
+
+export async function getAnnouncements(): Promise<Announcement[]> {
+  const { data } = await supabase
+    .from("announcements")
+    .select("*")
+    .order("pinned", { ascending: false })
+    .order("createdAt", { ascending: false });
+  return (data || []).map((r) => mapAnnouncement(r as unknown as Record<string, unknown>));
+}
+
+export async function createAnnouncement(
+  title: string,
+  content: string,
+  createdBy: string,
+  targetRole: "all" | "student" | "faculty",
+  pinned: boolean
+): Promise<void> {
+  const { error } = await supabase.from("announcements").insert({
+    title,
+    content,
+    createdBy,
+    createdAt: Date.now(),
+    targetRole,
+    pinned,
+  });
+  if (error) throw error;
+}
+
+export async function deleteAnnouncement(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("announcements")
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
 }
