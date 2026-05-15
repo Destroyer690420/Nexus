@@ -139,7 +139,7 @@ export function ResourcesTab() {
             className="absolute inset-0 bg-black/40"
             onClick={() => setDeleteConfirm(null)}
           />
-          <div className="relative z-10 w-full max-w-md rounded-lg border border-border bg-white p-6 shadow-lg">
+          <div className="relative z-10 w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-lg">
             <h2 className="text-lg font-semibold text-text-primary mb-4">
               Delete Resource
             </h2>

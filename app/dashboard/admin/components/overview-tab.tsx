@@ -42,7 +42,7 @@ export function OverviewTab() {
         {cards.map((card) => (
           <div
             key={card.label}
-            className="rounded-lg border border-border bg-white p-5"
+            className="rounded-lg border border-border bg-surface p-5"
           >
             <p className="text-sm text-text-secondary">{card.label}</p>
             <p className={`text-3xl font-semibold mt-1 ${card.color}`}>

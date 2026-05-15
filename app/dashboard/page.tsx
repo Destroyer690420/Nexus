@@ -79,7 +79,7 @@ export default function DashboardPage() {
       </p>
 
       <div className="mt-8 grid gap-4">
-        <div className="rounded-lg border border-border bg-white p-5">
+        <div className="rounded-lg border border-border bg-surface p-5">
           <h3 className="text-sm font-medium text-text-primary">
             Getting Started
           </h3>
@@ -93,7 +93,7 @@ export default function DashboardPage() {
         </div>
 
         {userData.role === "student" && upcoming.length > 0 && (
-          <div className="rounded-lg border border-border bg-white p-5">
+          <div className="rounded-lg border border-border bg-surface p-5">
             <h3 className="text-sm font-medium text-text-primary">
               Upcoming Deadlines
             </h3>
@@ -114,7 +114,7 @@ export default function DashboardPage() {
         )}
 
         {announcements.length > 0 && (
-          <div className="rounded-lg border border-border bg-white p-5">
+          <div className="rounded-lg border border-border bg-surface p-5">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-text-primary">
                 Announcements

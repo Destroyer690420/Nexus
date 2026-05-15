@@ -83,7 +83,7 @@ export default function SignupPage() {
               className={`rounded-md border px-4 py-3 text-sm font-medium transition-all duration-150 ease-out cursor-pointer ${
                 role === "student"
                   ? "border-accent bg-accent-light text-accent"
-                  : "border-border bg-white text-text-secondary hover:bg-surface"
+                  : "border-border bg-surface text-text-secondary hover:bg-surface-hover"
               }`}
             >
               <div className="font-semibold">Student</div>
@@ -95,7 +95,7 @@ export default function SignupPage() {
               className={`rounded-md border px-4 py-3 text-sm font-medium transition-all duration-150 ease-out cursor-pointer ${
                 role === "faculty"
                   ? "border-accent bg-accent-light text-accent"
-                  : "border-border bg-white text-text-secondary hover:bg-surface"
+                  : "border-border bg-surface text-text-secondary hover:bg-surface-hover"
               }`}
             >
               <div className="font-semibold">Faculty</div>

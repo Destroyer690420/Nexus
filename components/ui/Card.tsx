@@ -7,7 +7,7 @@ interface CardProps {
 export function Card({ children, className = "", onClick }: CardProps) {
   return (
     <div
-      className={`rounded-lg border border-border bg-white p-6 ${className}`}
+      className={`rounded-lg border border-border bg-surface p-6 ${className}`}
       onClick={onClick}
     >
       {children}

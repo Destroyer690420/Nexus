@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import type { UserData } from "@/types";
 
 export default function DashboardLayout({
@@ -49,13 +50,16 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen">
-      <aside className="w-60 border-r border-border bg-white flex-shrink-0">
+      <aside className="w-60 border-r border-border bg-surface flex-shrink-0">
         <div className="p-5 border-b border-border">
           <h2 className="text-base font-semibold text-text-primary tracking-tight">
             Academia OS
           </h2>
           <div className="mt-3">
             <SearchBar />
+          </div>
+          <div className="mt-2">
+            <ThemeToggle />
           </div>
         </div>
         <nav className="p-3 flex flex-col gap-1">

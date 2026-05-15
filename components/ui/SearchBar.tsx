@@ -90,7 +90,7 @@ export function SearchBar() {
       </form>
 
       {isOpen && (query.length >= 2) && (
-        <div className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-border bg-white shadow-lg z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-border bg-surface shadow-lg z-50 max-h-80 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-6">
               <div className="animate-spin h-5 w-5 border-2 border-text-tertiary border-t-accent rounded-full" />

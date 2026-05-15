@@ -48,7 +48,7 @@ export default function RoleSelectionPage() {
           className={`rounded-lg border p-5 text-left transition-all duration-150 ease-out cursor-pointer ${
             role === "student"
               ? "border-accent bg-accent-light"
-              : "border-border bg-white hover:bg-surface"
+              : "border-border bg-surface hover:bg-surface-hover"
           }`}
         >
           <div
@@ -72,7 +72,7 @@ export default function RoleSelectionPage() {
           className={`rounded-lg border p-5 text-left transition-all duration-150 ease-out cursor-pointer ${
             role === "faculty"
               ? "border-accent bg-accent-light"
-              : "border-border bg-white hover:bg-surface"
+              : "border-border bg-surface hover:bg-surface-hover"
           }`}
         >
           <div
