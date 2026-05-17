@@ -129,7 +129,7 @@ export function UsersTab() {
                   handleRoleChange(u.uid, e.target.value as UserRole)
                 }
                 disabled={changingRole === u.uid}
-                className="rounded border border-border bg-white px-2 py-1 text-xs text-text-primary outline-none focus:border-accent"
+                className="rounded border border-border bg-input-bg px-2 py-1 text-xs text-text-primary outline-none focus:border-accent"
               >
                 <option value="student">Student</option>
                 <option value="faculty">Faculty</option>

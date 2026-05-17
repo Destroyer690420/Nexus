@@ -104,14 +104,14 @@ export default function CreateAnnouncementPage() {
           <textarea value={content} onChange={(e) => setContent(e.target.value)}
             placeholder="Write your announcement..."
             rows={6}
-            className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:border-accent focus:ring-1 focus:ring-accent resize-none" />
+            className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:border-accent focus:ring-1 focus:ring-accent resize-none" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-text-primary">Target Audience</label>
             <select value={targetRole} onChange={(e) => setTargetRole(e.target.value as "all" | "student" | "faculty")}
-              className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
+              className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
               <option value="all">Everyone</option>
               <option value="student">Students only</option>
               <option value="faculty">Faculty only</option>

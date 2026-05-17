@@ -9,7 +9,7 @@ const resourceLabels: Record<ResourceType, string> = {
   notes: "Notes",
   pyqs: "PYQs",
   assignments: "Assignments",
-  labManuals: "Lab Manuals",
+  lab_manuals: "Lab Manuals",
   others: "Others",
 };
 

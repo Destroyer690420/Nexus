@@ -12,12 +12,12 @@ import type {
   Announcement,
 } from "@/types";
 
-type Row<T> = T;
-
 function mapUser(row: Record<string, unknown>): UserData {
   return {
     uid: row.uid as string,
     email: row.email as string,
+    name: (row.name as string) || "",
+    avatarUrl: (row.avatarUrl as string) || "",
     role: row.role as UserRole,
     createdAt: row.createdAt as number,
     approved: row.approved as boolean | undefined,
@@ -77,6 +77,7 @@ function mapResource(row: Record<string, unknown>): Resource {
     semesterId: row.semesterId as number,
     subjectId: row.subjectId as string,
     unit: row.unit as number | undefined,
+    year: row.year as number | undefined,
     fileUrl: row.fileUrl as string,
     tags: row.tags as string[],
     createdBy: row.createdBy as string,
@@ -127,6 +128,8 @@ function mapAnnouncement(row: Record<string, unknown>): Announcement {
     createdAt: row.createdAt as number,
     targetRole: row.targetRole as "all" | "student" | "faculty",
     pinned: row.pinned as boolean,
+    courseId: (row.courseId as string) || null,
+    semesterId: (row.semesterId as number) || null,
   };
 }
 
@@ -506,6 +509,52 @@ export async function getResources(type: ResourceType): Promise<Resource[]> {
   return (data || []).map((r) => mapResource(r as unknown as Record<string, unknown>));
 }
 
+export async function getResourcesFiltered(
+  type: ResourceType,
+  courseId: string,
+  branchId: string | null,
+  semesterId: number
+): Promise<Resource[]> {
+  let query = supabase
+    .from("resources")
+    .select("*")
+    .eq("type", type)
+    .eq("courseId", courseId)
+    .eq("semesterId", semesterId)
+    .order("createdAt", { ascending: false });
+
+  if (branchId) {
+    query = query.or(`branchId.eq.${branchId},branchId.is.null`);
+  }
+
+  const { data } = await query;
+  return (data || []).map((r) => mapResource(r as unknown as Record<string, unknown>));
+}
+
+export async function getResourcesBySubject(
+  type: ResourceType,
+  courseId: string,
+  branchId: string | null,
+  semesterId: number,
+  subjectId: string
+): Promise<Resource[]> {
+  let query = supabase
+    .from("resources")
+    .select("*")
+    .eq("type", type)
+    .eq("courseId", courseId)
+    .eq("semesterId", semesterId)
+    .eq("subjectId", subjectId)
+    .order("createdAt", { ascending: false });
+
+  if (branchId) {
+    query = query.or(`branchId.eq.${branchId},branchId.is.null`);
+  }
+
+  const { data } = await query;
+  return (data || []).map((r) => mapResource(r as unknown as Record<string, unknown>));
+}
+
 export async function getAllResources(): Promise<
   { type: ResourceType; data: Resource[] }[]
 > {
@@ -521,7 +570,7 @@ export async function getAllResources(): Promise<
     grouped[res.type].push(res);
   }
 
-  const types: ResourceType[] = ["notes", "pyqs", "assignments", "labManuals", "others"];
+  const types: ResourceType[] = ["notes", "pyqs", "assignments", "lab_manuals", "others"];
   return types
     .filter((t) => grouped[t])
     .map((type) => ({ type, data: grouped[type] || [] }));
@@ -601,12 +650,48 @@ export async function getAnnouncements(): Promise<Announcement[]> {
   return (data || []).map((r) => mapAnnouncement(r as unknown as Record<string, unknown>));
 }
 
+export async function getAnnouncementsForStudent(
+  courseId: string,
+  semesterId: number
+): Promise<Announcement[]> {
+  // Get announcements that are either:
+  // 1. For all students (no courseId/semesterId set), or
+  // 2. Matching the student's course and semester
+  const { data } = await supabase
+    .from("announcements")
+    .select("*")
+    .in("targetRole", ["all", "student"])
+    .order("pinned", { ascending: false })
+    .order("createdAt", { ascending: false });
+
+  const all = (data || []).map((r) => mapAnnouncement(r as unknown as Record<string, unknown>));
+
+  // Filter: show if no courseId set (global), or matches student's course+semester
+  return all.filter((a) => {
+    if (!a.courseId && !a.semesterId) return true; // global announcement
+    if (a.courseId === courseId && (a.semesterId === semesterId || !a.semesterId)) return true;
+    return false;
+  });
+}
+
+export async function getRecentAnnouncementsForStudent(
+  courseId: string,
+  semesterId: number,
+  daysBack: number = 7
+): Promise<Announcement[]> {
+  const cutoff = Date.now() - daysBack * 24 * 60 * 60 * 1000;
+  const all = await getAnnouncementsForStudent(courseId, semesterId);
+  return all.filter((a) => a.createdAt >= cutoff);
+}
+
 export async function createAnnouncement(
   title: string,
   content: string,
   createdBy: string,
   targetRole: "all" | "student" | "faculty",
-  pinned: boolean
+  pinned: boolean,
+  courseId?: string | null,
+  semesterId?: number | null
 ): Promise<void> {
   const { error } = await supabase.from("announcements").insert({
     title,
@@ -615,6 +700,8 @@ export async function createAnnouncement(
     createdAt: Date.now(),
     targetRole,
     pinned,
+    courseId: courseId || null,
+    semesterId: semesterId || null,
   });
   if (error) throw error;
 }

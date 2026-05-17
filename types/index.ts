@@ -3,12 +3,14 @@ export type UserRole = "student" | "faculty" | "admin";
 export interface UserData {
   uid: string;
   email: string;
+  name: string;
+  avatarUrl: string;
   role: UserRole;
   createdAt: number;
   approved?: boolean;
 }
 
-export type ResourceType = "notes" | "pyqs" | "assignments" | "labManuals" | "others";
+export type ResourceType = "notes" | "pyqs" | "assignments" | "lab_manuals" | "others";
 
 export interface Contribution {
   id: string;
@@ -41,6 +43,7 @@ export interface Resource {
   semesterId: number;
   subjectId?: string;
   unit?: number;
+  year?: number;
   fileUrl?: string;
   tags?: string[];
   createdBy: string;
@@ -100,4 +103,14 @@ export interface Announcement {
   createdAt: number;
   targetRole: "all" | "student" | "faculty";
   pinned: boolean;
+  courseId?: string | null;
+  semesterId?: number | null;
+}
+
+export interface StudentProfile {
+  uid: string;
+  courseId: string;
+  branchId: string | null;
+  semesterId: number;
+  createdAt: number;
 }

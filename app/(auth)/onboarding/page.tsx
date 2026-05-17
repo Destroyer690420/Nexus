@@ -128,7 +128,7 @@ export default function OnboardingPage() {
           <select
             value={selectedCourse}
             onChange={(e) => setSelectedCourse(e.target.value)}
-            className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all duration-150"
+            className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all duration-150"
           >
             <option value="" disabled>
               Select your course
@@ -149,7 +149,7 @@ export default function OnboardingPage() {
             <select
               value={selectedBranch}
               onChange={(e) => setSelectedBranch(e.target.value)}
-              className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all duration-150"
+              className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all duration-150"
             >
               <option value="" disabled>
                 Select your branch
@@ -171,7 +171,7 @@ export default function OnboardingPage() {
             <select
               value={selectedSemester}
               onChange={(e) => setSelectedSemester(e.target.value)}
-              className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all duration-150"
+              className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all duration-150"
             >
               <option value="" disabled>
                 Select your semester

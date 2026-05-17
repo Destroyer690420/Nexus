@@ -157,7 +157,7 @@ export default function CreateAssignmentPage() {
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-text-primary">Course *</label>
             <select value={courseId} onChange={(e) => setCourseId(e.target.value)} required
-              className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
+              className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
               <option value="" disabled>Select course</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
@@ -169,7 +169,7 @@ export default function CreateAssignmentPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-text-primary">Branch</label>
               <select value={branchId} onChange={(e) => setBranchId(e.target.value)}
-                className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
+                className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
                 <option value="" disabled>Select branch</option>
                 {branches.map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
@@ -181,7 +181,7 @@ export default function CreateAssignmentPage() {
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-text-primary">Semester *</label>
             <select value={semesterId} onChange={(e) => setSemesterId(e.target.value)} required
-              className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
+              className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
               <option value="" disabled>Select semester</option>
               {selectedCourse?.semesters.map((s) => (
                 <option key={s} value={String(s)}>Semester {s}</option>
@@ -192,7 +192,7 @@ export default function CreateAssignmentPage() {
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-text-primary">Due Date *</label>
             <input type="datetime-local" value={dueDate} onChange={(e) => setDueDate(e.target.value)} required
-              className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent" />
+              className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent" />
           </div>
         </div>
 
@@ -204,7 +204,7 @@ export default function CreateAssignmentPage() {
             </p>
           ) : (
             <select value={subject} onChange={(e) => setSubject(e.target.value)} required
-              className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
+              className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
               <option value="" disabled>Select subject</option>
               {subjects.map((s) => (
                 <option key={s.id} value={s.name}>{s.name} ({s.code})</option>
@@ -221,7 +221,7 @@ export default function CreateAssignmentPage() {
           <textarea value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder="Instructions for this assignment..."
             rows={3}
-            className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:border-accent focus:ring-1 focus:ring-accent resize-none" />
+            className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:border-accent focus:ring-1 focus:ring-accent resize-none" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -229,7 +229,7 @@ export default function CreateAssignmentPage() {
             <label className="text-sm font-medium text-text-primary">Max Marks</label>
             <input type="number" value={maxMarks} onChange={(e) => setMaxMarks(e.target.value)}
               placeholder="e.g. 100" min="0"
-              className="rounded-md border border-border bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent" />
+              className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent" />
           </div>
 
           <div className="flex flex-col gap-1.5">

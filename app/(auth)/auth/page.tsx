@@ -37,10 +37,13 @@ export default function AuthPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center">
-        <h1 className="text-3xl font-semibold tracking-tight text-text-primary">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-accent shadow-lg shadow-accent/25">
+          <span className="text-white text-xl font-bold">A</span>
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-text-primary">
           Academia OS
         </h1>
-        <p className="mt-2 text-sm text-text-secondary">
+        <p className="mt-1.5 text-sm text-text-secondary">
           College resources, simplified.
         </p>
       </div>
@@ -50,7 +53,7 @@ export default function AuthPage() {
           onClick={handleGoogle}
           loading={loading}
           variant="secondary"
-          className="w-full h-11"
+          className="w-full h-12 text-[13px]"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path
@@ -73,26 +76,29 @@ export default function AuthPage() {
           Continue with Google
         </Button>
 
-        <div className="relative my-1">
+        <div className="relative my-2">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-text-tertiary">or</span>
+            <span className="bg-surface/80 px-3 text-text-tertiary font-medium">or</span>
           </div>
         </div>
 
         <Button
           onClick={() => router.push("/auth/login")}
           variant="ghost"
-          className="w-full h-11 text-text-secondary"
+          className="w-full h-12 text-[13px] text-text-secondary"
         >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
           Continue with Email
         </Button>
       </div>
 
       {error && (
-        <p className="text-center text-sm text-destructive">{error}</p>
+        <div className="rounded-[var(--radius-md)] bg-destructive/10 border border-destructive/20 p-3">
+          <p className="text-center text-sm text-destructive">{error}</p>
+        </div>
       )}
     </div>
   );

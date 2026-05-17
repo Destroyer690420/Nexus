@@ -2,48 +2,37 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui";
+import { PageHeader, SubjectGrid, EmptyState, Button } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
-
-interface Resource {
-  id: string;
-  title: string;
-  description: string;
-  subjectId: string;
-  unit: number | null;
-  fileUrl: string;
-  tags: string[];
-  createdAt: number;
-}
+import { getSubjects } from "@/lib/queries";
+import type { StudentProfile } from "@/types";
 
 export default function PYQsPage() {
   const router = useRouter();
-  const [items, setItems] = useState<Resource[]>([]);
+  const [subjects, setSubjects] = useState<{ id: string; name: string; code: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     const unsub = onAuthChange(async (user) => {
       if (!user) { router.replace("/auth"); return; }
       const data = await getUserData(user.id);
-      if (!data || data.role !== "student") { router.replace("/dashboard"); return; }
+      if (!data) { router.replace("/auth"); return; }
+      setUserRole(data.role);
 
-      const { data: profile } = await supabase
-        .from("student_profiles").select("*").eq("uid", user.id).single();
-      if (!profile) { router.replace("/onboarding"); return; }
-
-      let query = supabase
-        .from("resources").select("*")
-        .eq("type", "pyqs")
-        .eq("courseId", (profile as { courseId: string }).courseId)
-        .eq("semesterId", (profile as { semesterId: number }).semesterId)
-        .order("createdAt", { ascending: false });
-
-      const p = profile as { branchId: string | null };
-      if (p.branchId) query = query.eq("branchId", p.branchId);
-
-      const { data: resourceData } = await query;
-      setItems((resourceData || []) as Resource[]);
+      if (data.role === "student") {
+        const { data: profile } = await supabase
+          .from("student_profiles").select("*").eq("uid", user.id).single();
+        if (!profile) { router.replace("/onboarding"); return; }
+        const p = profile as unknown as StudentProfile;
+        const subs = await getSubjects(p.courseId, p.branchId, p.semesterId);
+        setSubjects(subs);
+      } else {
+        const { data: allSubs } = await supabase
+          .from("subjects").select("id, name, code").order("name", { ascending: true });
+        setSubjects((allSubs || []) as { id: string; name: string; code: string }[]);
+      }
       setLoading(false);
     });
     return unsub;
@@ -57,49 +46,24 @@ export default function PYQsPage() {
     );
   }
 
-  return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl font-semibold tracking-tight text-text-primary mb-1">
-        Previous Year Questions
-      </h1>
-      <p className="text-sm text-text-secondary mb-8">
-        {items.length} PYQ{items.length !== 1 ? "s" : ""} available.
-      </p>
+  const canUpload = userRole === "admin" || userRole === "faculty";
 
-      {items.length === 0 ? (
-        <Card><p className="text-sm text-text-secondary">No PYQs available for your current course and semester yet.</p></Card>
+  return (
+    <div className="max-w-2xl">
+      <PageHeader
+        title="Previous Year Questions"
+        subtitle={`${subjects.length} subject${subjects.length !== 1 ? "s" : ""} available`}
+        icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>}
+      />
+
+      {subjects.length === 0 ? (
+        <EmptyState
+          title="No subjects found"
+          description={canUpload ? "No subjects have been added yet." : "No subjects available for your current course and semester."}
+          action={canUpload ? <Button onClick={() => router.push("/dashboard/upload")}>Upload PYQs</Button> : undefined}
+        />
       ) : (
-        <div className="flex flex-col gap-3">
-          {items.map((r) => (
-            <Card key={r.id} className="p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    {r.subjectId && (
-                      <span className="rounded bg-accent-light px-2 py-0.5 text-xs font-medium text-accent">{r.subjectId}</span>
-                    )}
-                    {r.unit && <span className="text-xs text-text-tertiary">Unit {r.unit}</span>}
-                  </div>
-                  <p className="text-sm font-medium text-text-primary mt-1">{r.title}</p>
-                  {r.description && <p className="text-xs text-text-secondary mt-1">{r.description}</p>}
-                  {r.tags && r.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {r.tags.map((tag) => (
-                        <span key={tag} className="rounded bg-surface px-2 py-0.5 text-xs text-text-tertiary">{tag}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {r.fileUrl && (
-                  <a href={r.fileUrl} target="_blank" rel="noopener noreferrer"
-                    className="flex-shrink-0 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent-light transition-colors duration-150">
-                    Open
-                  </a>
-                )}
-              </div>
-            </Card>
-          ))}
-        </div>
+        <SubjectGrid subjects={subjects} basePath="/dashboard/pyqs" />
       )}
     </div>
   );

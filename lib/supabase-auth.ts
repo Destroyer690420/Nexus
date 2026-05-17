@@ -7,6 +7,8 @@ function mapUser(row: Record<string, unknown> | null): UserData | null {
   return {
     uid: row.uid as string,
     email: row.email as string,
+    name: (row.name as string) || "",
+    avatarUrl: (row.avatarUrl as string) || "",
     role: row.role as UserRole,
     createdAt: row.createdAt as number,
     approved: row.approved as boolean | undefined,
@@ -16,7 +18,8 @@ function mapUser(row: Record<string, unknown> | null): UserData | null {
 export async function signUpWithEmail(
   email: string,
   password: string,
-  role: UserRole
+  role: UserRole,
+  name?: string
 ) {
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) throw error;
@@ -29,6 +32,7 @@ export async function signUpWithEmail(
       uid: data.user.id,
       email: data.user.email || email,
       role,
+      name: name || "",
     }),
   });
   if (!res.ok) {
@@ -79,12 +83,13 @@ export async function getUserData(uid: string): Promise<UserData | null> {
 export async function createUserData(
   uid: string,
   email: string,
-  role: UserRole
+  role: UserRole,
+  name?: string
 ) {
   const res = await fetch("/api/auth/create-user", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ uid, email, role }),
+    body: JSON.stringify({ uid, email, role, name: name || "" }),
   });
   if (!res.ok) {
     const err = await res.json();
@@ -93,10 +98,23 @@ export async function createUserData(
   return {
     uid,
     email,
+    name: name || "",
+    avatarUrl: "",
     role,
     approved: role === "faculty" ? false : undefined,
     createdAt: Date.now(),
   } as UserData;
+}
+
+export async function updateUserProfile(
+  uid: string,
+  updates: { name?: string; avatarUrl?: string }
+): Promise<void> {
+  const { error } = await supabase
+    .from("users")
+    .update(updates)
+    .eq("uid", uid);
+  if (error) throw error;
 }
 
 export function onAuthChange(

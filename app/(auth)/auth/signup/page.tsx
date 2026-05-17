@@ -12,6 +12,7 @@ import type { UserRole } from "@/types";
 
 export default function SignupPage() {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("student");
@@ -23,7 +24,7 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
     try {
-      await signUpWithEmail(email, password, role);
+      await signUpWithEmail(email, password, role, name);
       router.replace(`/auth/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError(getAuthErrorMessage(err));
@@ -54,6 +55,14 @@ export default function SignupPage() {
       </div>
 
       <form onSubmit={handleEmailSignup} className="flex flex-col gap-4">
+        <Input
+          label="Full Name"
+          type="text"
+          placeholder="Your full name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
         <Input
           label="Email"
           type="email"

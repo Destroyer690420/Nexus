@@ -275,7 +275,7 @@ export function CoursesTab() {
                 <div className="flex gap-3 mb-3">
                   {c.hasBranches && (
                     <select value={subBranch} onChange={(e) => setSubBranch(e.target.value)}
-                      className="rounded-md border border-border bg-white px-2.5 py-1.5 text-xs text-text-primary outline-none focus:border-accent">
+                      className="rounded-md border border-border bg-input-bg px-2.5 py-1.5 text-xs text-text-primary outline-none focus:border-accent">
                       <option value="">All branches</option>
                       {branchData[c.id]?.map((b) => (
                         <option key={b.id} value={b.id}>{b.name}</option>
@@ -283,7 +283,7 @@ export function CoursesTab() {
                     </select>
                   )}
                   <select value={subSemester} onChange={(e) => setSubSemester(e.target.value)}
-                    className="rounded-md border border-border bg-white px-2.5 py-1.5 text-xs text-text-primary outline-none focus:border-accent">
+                    className="rounded-md border border-border bg-input-bg px-2.5 py-1.5 text-xs text-text-primary outline-none focus:border-accent">
                     <option value="">Select semester</option>
                     {c.semesters.map((s) => (
                       <option key={s} value={String(s)}>Semester {s}</option>

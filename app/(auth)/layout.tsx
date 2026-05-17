@@ -4,8 +4,23 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-sm px-4">{children}</div>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden">
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-background to-accent/3" />
+      
+      {/* Decorative orbs */}
+      <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-accent/[0.04] blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-20%] left-[-10%] w-[400px] h-[400px] rounded-full bg-accent/[0.03] blur-3xl pointer-events-none" />
+      
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(79,110,247,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(79,110,247,0.02)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none" />
+      
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-[420px] px-5 animate-slide-up">
+        <div className="rounded-[var(--radius-xl)] border border-border/60 bg-surface/80 backdrop-blur-xl p-8 shadow-xl shadow-black/[0.03]">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }
