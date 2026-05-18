@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-const ADMIN_EMAIL = "admin@academiaos.com";
+const ADMIN_EMAIL = "admin@nexus.com";
 const ADMIN_PASSWORD = "Admin123!";
 
 const courses = [

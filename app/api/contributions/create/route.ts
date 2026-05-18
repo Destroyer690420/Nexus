@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
       semesterId,
       subjectId = "",
       unit,
+      years,
       tags: tagsStr = "",
       fileUrl = "",
     } = await req.json();
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
       ? tagsStr.split(",").map((t: string) => t.trim()).filter(Boolean)
       : tagsStr;
 
-    const { error: insertError } = await supabaseAdmin.from("contributions").insert({
+    const baseContribution = {
       type,
       title,
       description,
@@ -60,9 +61,19 @@ export async function POST(req: NextRequest) {
       contributorName: user.email || "",
       status: "pending",
       createdAt: Date.now(),
-    });
+    };
 
-    if (insertError) throw insertError;
+    if (type === "pyqs" && Array.isArray(years) && years.length > 0) {
+      const contributionsToInsert = years.map((y) => ({
+        ...baseContribution,
+        year: Number(y),
+      }));
+      const { error: insertError } = await supabaseAdmin.from("contributions").insert(contributionsToInsert);
+      if (insertError) throw insertError;
+    } else {
+      const { error: insertError } = await supabaseAdmin.from("contributions").insert(baseContribution);
+      if (insertError) throw insertError;
+    }
 
     return NextResponse.json({ success: true, fileUrl });
   } catch (err) {

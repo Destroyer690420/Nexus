@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Academia OS",
+  title: "Nexus",
   description: "College resource and ERP platform",
 };
 

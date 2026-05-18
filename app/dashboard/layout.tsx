@@ -96,7 +96,6 @@ export default function DashboardLayout({
   }
 
   const navItems = buildNavItems(userData);
-  const displayName = userData?.name || userData?.email?.split("@")[0] || "User";
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -111,16 +110,16 @@ export default function DashboardLayout({
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-[var(--radius-md)] bg-accent flex items-center justify-center shadow-sm shadow-accent/25">
-                <span className="text-white text-sm font-bold">A</span>
+                <span className="text-white text-sm font-bold">N</span>
               </div>
               <h2 className="text-base font-semibold text-text-primary tracking-tight">
-                Academia OS
+                Nexus
               </h2>
             </div>
           )}
           {sidebarCollapsed && (
             <div className="h-8 w-8 rounded-[var(--radius-md)] bg-accent flex items-center justify-center shadow-sm shadow-accent/25 mx-auto">
-              <span className="text-white text-sm font-bold">A</span>
+              <span className="text-white text-sm font-bold">N</span>
             </div>
           )}
           <button
@@ -196,10 +195,10 @@ export default function DashboardLayout({
         <div className="p-5 pb-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-[var(--radius-md)] bg-accent flex items-center justify-center shadow-sm shadow-accent/25">
-              <span className="text-white text-sm font-bold">A</span>
+              <span className="text-white text-sm font-bold">N</span>
             </div>
             <h2 className="text-base font-semibold text-text-primary tracking-tight">
-              Academia OS
+              Nexus
             </h2>
           </div>
           <button
@@ -246,19 +245,11 @@ export default function DashboardLayout({
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarCollapsed ? "lg:ml-[68px]" : "lg:ml-64"}`}>
         {/* Mobile top header */}
         <header className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            {isStudent ? (
-              <p className="text-base font-semibold text-text-primary truncate">
-                Hello, {displayName}
-              </p>
-            ) : (
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-[var(--radius-sm)] bg-accent flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">A</span>
-                </div>
-                <span className="text-sm font-semibold text-text-primary">Academia OS</span>
-              </div>
-            )}
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-[var(--radius-sm)] bg-accent flex items-center justify-center">
+              <span className="text-white text-xs font-bold">N</span>
+            </div>
+            <span className="text-sm font-semibold text-text-primary">Nexus</span>
           </div>
           <button
             onClick={() => setSidebarOpen(true)}
@@ -269,9 +260,41 @@ export default function DashboardLayout({
         </header>
 
         {/* Page content */}
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8 max-w-6xl w-full mx-auto animate-fade-in">
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8 max-w-6xl w-full mx-auto pb-20 lg:pb-0 animate-fade-in">
           {children}
         </main>
+
+        {/* Mobile bottom navigation */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-background/90 backdrop-blur-lg border-t border-border">
+          <div className="flex items-center justify-around py-2">
+            <BottomNavItem
+              href="/dashboard"
+              label="Home"
+              icon={NAV_ICONS["Home"]}
+              active={pathname === "/dashboard"}
+            />
+            <BottomNavItem
+              href="/dashboard/announcements"
+              label="Announcements"
+              icon={NAV_ICONS["Announcements"]}
+              active={pathname.startsWith("/dashboard/announcements")}
+            />
+            {isStudent && (
+              <BottomNavItem
+                href="/dashboard/contribute"
+                label="Contribute"
+                icon={NAV_ICONS["Contribute"]}
+                active={pathname.startsWith("/dashboard/contribute")}
+              />
+            )}
+            <BottomNavItem
+              href="/dashboard/profile"
+              label="Profile"
+              icon={NAV_ICONS["Profile"]}
+              active={pathname.startsWith("/dashboard/profile")}
+            />
+          </div>
+        </nav>
       </div>
     </div>
   );
@@ -353,6 +376,35 @@ function NavItem({
         {icon}
       </span>
       {!collapsed && <span className="truncate">{label}</span>}
+    </button>
+  );
+}
+
+function BottomNavItem({
+  href,
+  label,
+  icon,
+  active,
+}: {
+  href: string;
+  label: string;
+  icon?: React.ReactNode;
+  active: boolean;
+}) {
+  const router = useRouter();
+  return (
+    <button
+      onClick={() => router.push(href)}
+      className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-[var(--radius-sm)] transition-all duration-200 cursor-pointer min-w-0 ${
+        active
+          ? "text-accent"
+          : "text-text-tertiary hover:text-text-secondary"
+      }`}
+    >
+      <span className={`flex-shrink-0 transition-transform duration-200 ${active ? "scale-110" : ""}`}>
+        {icon}
+      </span>
+      <span className="text-[10px] font-medium truncate">{label}</span>
     </button>
   );
 }

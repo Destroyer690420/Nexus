@@ -30,8 +30,12 @@ export default function UploadPage() {
   const [semesterId, setSemesterId] = useState(""); const [subject, setSubject] = useState("");
   const [subjects, setSubjects] = useState<SubjectItem[]>([]);
   const [unit, setUnit] = useState(""); const [title, setTitle] = useState("");
+  const [years, setYears] = useState<number[]>([]);
   const [description, setDescription] = useState(""); const [tags, setTags] = useState("");
   const [file, setFile] = useState<File | null>(null);
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 10 }, (_, i) => currentYear - i);
   const [submitting, setSubmitting] = useState(false); const [error, setError] = useState(""); const [success, setSuccess] = useState("");
 
   useEffect(() => {
@@ -72,6 +76,7 @@ export default function UploadPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !courseId || !semesterId || !subject) { setError("Please fill in all required fields."); return; }
+    if (type === "pyqs" && years.length === 0) { setError("Please select at least one year for PYQs."); return; }
     setSubmitting(true); setError(""); setSuccess("");
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -90,7 +95,7 @@ export default function UploadPage() {
         body: JSON.stringify({
           type, title, description: description || "",
           courseId, branchId: branchId || "", semesterId: Number(semesterId),
-          subjectId: subject, unit: unit || "", tags, fileUrl,
+          subjectId: subject, unit: unit || "", years, tags, fileUrl,
         }),
       });
       if (!res.ok) {
@@ -100,7 +105,7 @@ export default function UploadPage() {
         throw new Error(errorMessage);
       }
       setSuccess(`${title} uploaded successfully!`);
-      setTitle(""); setDescription(""); setTags(""); setSubject(""); setUnit(""); setSemesterId(""); setFile(null);
+      setTitle(""); setDescription(""); setTags(""); setSubject(""); setUnit(""); setSemesterId(""); setFile(null); setYears([]);
     } catch (err) { setError((err as { message?: string })?.message || "Upload failed."); }
     setSubmitting(false);
   };
@@ -145,11 +150,31 @@ export default function UploadPage() {
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-text-primary">Unit</label>
-            <select value={unit} onChange={(e) => setUnit(e.target.value)} className={selectClass}>
-              <option value="">None</option>
-              {[1, 2, 3, 4].map((u) => <option key={u} value={String(u)}>Unit {u}</option>)}
-            </select>
+            {type === "pyqs" ? (
+              <>
+                <label className="text-sm font-medium text-text-primary">Years *</label>
+                <div className="flex flex-wrap gap-2">
+                  {yearOptions.map(y => (
+                    <button
+                      key={y}
+                      type="button"
+                      onClick={() => setYears(prev => prev.includes(y) ? prev.filter(x => x !== y) : [...prev, y])}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-200 ${years.includes(y) ? 'bg-accent text-white border-accent shadow-sm' : 'bg-input-bg text-text-secondary border-border hover:border-accent/50 hover:text-accent'}`}
+                    >
+                      {y}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <label className="text-sm font-medium text-text-primary">Unit</label>
+                <select value={unit} onChange={(e) => setUnit(e.target.value)} className={selectClass}>
+                  <option value="">None</option>
+                  {[1, 2, 3, 4].map((u) => <option key={u} value={String(u)}>Unit {u}</option>)}
+                </select>
+              </>
+            )}
           </div>
         </div>
 

@@ -1,4 +1,4 @@
--- Academia OS Supabase Schema
+-- Nexus Supabase Schema
 -- Run this in Supabase SQL Editor
 
 -- Users table

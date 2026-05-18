@@ -1,4 +1,4 @@
--- RLS Policies for Academia OS
+-- RLS Policies for Nexus
 -- Run this in Supabase SQL Editor (safe to re-run)
 
 -- Helper function: returns the current user's role (bypasses RLS via SECURITY DEFINER)

@@ -38,10 +38,10 @@ export default function AuthPage() {
     <div className="flex flex-col gap-8">
       <div className="text-center">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-accent shadow-lg shadow-accent/25">
-          <span className="text-white text-xl font-bold">A</span>
+          <span className="text-white text-xl font-bold">N</span>
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-          Academia OS
+          Nexus
         </h1>
         <p className="mt-1.5 text-sm text-text-secondary">
           College resources, simplified.

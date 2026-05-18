@@ -36,7 +36,7 @@ export function OverviewTab() {
   return (
     <div>
       <p className="text-sm text-text-secondary mb-6">
-        Overview of your Academia OS instance.
+        Overview of your Nexus instance.
       </p>
       <div className="grid grid-cols-2 gap-4">
         {cards.map((card) => (

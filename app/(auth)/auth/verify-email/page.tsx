@@ -75,7 +75,7 @@ function VerifyEmailContent() {
           </span>
         </p>
         <p className="mt-3 rounded-md border border-border bg-surface px-4 py-3 text-sm text-text-secondary">
-          Open your email inbox, find the message from Academia OS, and click
+          Open your email inbox, find the message from Nexus, and click
           the <strong className="text-text-primary">Confirm</strong> button to
           activate your account. You can then sign in.
         </p>

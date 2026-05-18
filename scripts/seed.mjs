@@ -24,7 +24,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const ADMIN_EMAIL = "admin@academiaos.com";
+const ADMIN_EMAIL = "admin@nexus.com";
 const ADMIN_PASSWORD = "Admin123!";
 
 const courses = [
