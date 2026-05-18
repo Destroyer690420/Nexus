@@ -1,21 +1,31 @@
 import { supabase } from "./supabase";
 
-export async function uploadFile(
-  file: File,
-  folder: string
-): Promise<string> {
-  const ext = file.name.split(".").pop();
-  const fileName = `${folder}/${crypto.randomUUID()}.${ext}`;
+export async function uploadFile(file: File): Promise<{ publicUrl: string; path: string }> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token;
+  if (!token) throw new Error("Not authenticated");
 
-  const { error } = await supabase.storage
-    .from("resources")
-    .upload(fileName, file);
+  const urlRes = await fetch("/api/upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ fileName: file.name, contentType: file.type }),
+  });
 
-  if (error) throw error;
+  if (!urlRes.ok) {
+    let msg = "Failed to get upload URL";
+    try { const err = await urlRes.json(); msg = err.error || msg; } catch {}
+    throw new Error(msg);
+  }
 
-  const { data: urlData } = supabase.storage
-    .from("resources")
-    .getPublicUrl(fileName);
+  const { signedUrl, publicUrl, path } = await urlRes.json();
 
-  return urlData.publicUrl;
+  const uploadRes = await fetch(signedUrl, {
+    method: "PUT",
+    body: file,
+    headers: { "Content-Type": file.type },
+  });
+
+  if (!uploadRes.ok) throw new Error("File upload to storage failed");
+
+  return { publicUrl, path };
 }

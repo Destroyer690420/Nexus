@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
+import { uploadFile } from "@/lib/upload";
 import type { UserData } from "@/types";
 
 interface Course { id: string; name: string; code: string; hasBranches: boolean; semesters: number[] }
@@ -99,22 +100,20 @@ export default function CreateAssignmentPage() {
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Not authenticated");
 
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("description", description || "");
-      formData.append("courseId", courseId);
-      formData.append("branchId", branchId || "");
-      formData.append("semesterId", String(semesterId));
-      formData.append("subjectId", subject);
-      formData.append("dueDate", String(new Date(dueDate).getTime()));
-      if (maxMarks) formData.append("maxMarks", maxMarks);
-      formData.append("allowLate", String(allowLate));
-      if (file) formData.append("file", file);
+      let fileUrl = "";
+      if (file) {
+        const result = await uploadFile(file);
+        fileUrl = result.publicUrl;
+      }
 
       const res = await fetch("/api/assignments/create", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          title, description: description || "", courseId,
+          branchId: branchId || "", semesterId: Number(semesterId), subjectId: subject,
+          dueDate: new Date(dueDate).getTime(), maxMarks: maxMarks || "", allowLate, fileUrl,
+        }),
       });
 
       if (!res.ok) {

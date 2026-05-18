@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button, Input, PageHeader } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
+import { uploadFile } from "@/lib/upload";
 import type { UserData, ResourceType } from "@/types";
 
 interface Course { id: string; name: string; code: string; hasBranches: boolean; semesters: number[] }
@@ -76,13 +77,22 @@ export default function UploadPage() {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Not authenticated");
-      const formData = new FormData();
-      formData.append("type", type); formData.append("title", title); formData.append("description", description || "");
-      formData.append("courseId", courseId); formData.append("branchId", branchId || "");
-      formData.append("semesterId", String(semesterId)); formData.append("subjectId", subject);
-      formData.append("unit", unit || ""); formData.append("tags", tags);
-      if (file) formData.append("file", file);
-      const res = await fetch("/api/resources/create", { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData });
+
+      let fileUrl = "";
+      if (file) {
+        const result = await uploadFile(file);
+        fileUrl = result.publicUrl;
+      }
+
+      const res = await fetch("/api/resources/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          type, title, description: description || "",
+          courseId, branchId: branchId || "", semesterId: Number(semesterId),
+          subjectId: subject, unit: unit || "", tags, fileUrl,
+        }),
+      });
       if (!res.ok) {
         let errorMessage = "Upload failed";
         try { const err = await res.json(); errorMessage = err.error || errorMessage; }

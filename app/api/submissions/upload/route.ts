@@ -24,11 +24,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const formData = await req.formData();
-    const assignmentId = formData.get("assignmentId") as string;
-    const file = formData.get("file") as File | null;
+    const {
+      assignmentId,
+      fileUrl,
+    } = await req.json();
 
-    if (!assignmentId || !file || file.size === 0) {
+    if (!assignmentId || !fileUrl) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -51,26 +52,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Submission deadline has passed and late submissions are not allowed" }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop();
-    const fileName = `submissions/${user.id}/${assignmentId}/${Date.now()}_${crypto.randomUUID()}.${ext}`;
-
-    const { error: bucketError } = await supabaseAdmin.storage.createBucket("resources", {
-      public: true,
-    });
-
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from("resources")
-      .upload(fileName, file, { upsert: true });
-
-    if (uploadError) {
-      return NextResponse.json({ error: `Storage upload failed: ${uploadError.message}` }, { status: 500 });
-    }
-
-    const { data: urlData } = supabaseAdmin.storage
-      .from("resources")
-      .getPublicUrl(fileName);
-
-    const fileUrl = urlData.publicUrl;
     const status = isLate ? "late" : "submitted";
 
     const { data: existing } = await supabaseAdmin

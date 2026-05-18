@@ -24,53 +24,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    const type = formData.get("type") as string;
-    const title = formData.get("title") as string;
-    const description = (formData.get("description") as string) || "";
-    const courseId = formData.get("courseId") as string;
-    const branchId = (formData.get("branchId") as string) || null;
-    const semesterId = Number(formData.get("semesterId"));
-    const subjectId = (formData.get("subjectId") as string) || "";
-    const unit = formData.get("unit") ? Number(formData.get("unit")) : null;
-    const tagsStr = (formData.get("tags") as string) || "";
-    const tags = tagsStr ? tagsStr.split(",").map((t: string) => t.trim()).filter(Boolean) : [];
+    const {
+      type,
+      title,
+      description = "",
+      courseId,
+      branchId = null,
+      semesterId,
+      subjectId = "",
+      unit,
+      tags: tagsStr = "",
+      fileUrl = "",
+    } = await req.json();
 
-    let fileUrl = "";
-
-    if (file && file.size > 0) {
-      const ext = file.name.split(".").pop();
-      const fileName = `contributions/${user.id}/${Date.now()}_${crypto.randomUUID()}.${ext}`;
-
-      const { error: bucketError } = await supabaseAdmin.storage.createBucket("resources", {
-        public: true,
-      });
-
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from("resources")
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) {
-        return NextResponse.json({ error: `Storage upload failed: ${uploadError.message}` }, { status: 500 });
-      }
-
-      const { data: urlData } = supabaseAdmin.storage
-        .from("resources")
-        .getPublicUrl(fileName);
-
-      fileUrl = urlData.publicUrl;
+    if (!type || !title || !courseId || semesterId === undefined || semesterId === null || !subjectId) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+
+    const tags = typeof tagsStr === "string"
+      ? tagsStr.split(",").map((t: string) => t.trim()).filter(Boolean)
+      : tagsStr;
 
     const { error: insertError } = await supabaseAdmin.from("contributions").insert({
       type,
       title,
       description,
       courseId,
-      branchId,
-      semesterId,
+      branchId: branchId || null,
+      semesterId: Number(semesterId),
       subjectId,
-      unit,
+      unit: unit ? Number(unit) : null,
       fileUrl,
       tags,
       contributedBy: user.id,

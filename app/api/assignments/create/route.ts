@@ -24,58 +24,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    const title = formData.get("title") as string;
-    const description = (formData.get("description") as string) || "";
-    const courseId = formData.get("courseId") as string;
-    const branchId = (formData.get("branchId") as string) || null;
-    const semesterId = Number(formData.get("semesterId"));
-    const subjectId = formData.get("subjectId") as string;
-    const dueDate = Number(formData.get("dueDate"));
-    const maxMarks = formData.get("maxMarks") ? Number(formData.get("maxMarks")) : null;
-    const allowLate = formData.get("allowLate") === "true";
+    const {
+      title,
+      description = "",
+      courseId,
+      branchId = null,
+      semesterId,
+      subjectId,
+      dueDate,
+      maxMarks,
+      allowLate = false,
+      fileUrl = "",
+    } = await req.json();
 
-    if (!title || !courseId || !semesterId || !subjectId || !dueDate) {
+    if (!title || !courseId || semesterId === undefined || semesterId === null || !subjectId || !dueDate) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-
-    let fileUrl = "";
-
-    if (file && file.size > 0) {
-      const ext = file.name.split(".").pop();
-      const fileName = `assignments/${user.id}/${Date.now()}_${crypto.randomUUID()}.${ext}`;
-
-      const { error: bucketError } = await supabaseAdmin.storage.createBucket("resources", {
-        public: true,
-      });
-
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from("resources")
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) {
-        return NextResponse.json({ error: `Storage upload failed: ${uploadError.message}` }, { status: 500 });
-      }
-
-      const { data: urlData } = supabaseAdmin.storage
-        .from("resources")
-        .getPublicUrl(fileName);
-
-      fileUrl = urlData.publicUrl;
     }
 
     const { error: insertError } = await supabaseAdmin.from("assignments").insert({
       title,
       description,
       courseId,
-      branchId,
-      semesterId,
+      branchId: branchId || null,
+      semesterId: Number(semesterId),
       subjectId,
       fileUrl,
-      dueDate,
-      maxMarks,
-      allowLate,
+      dueDate: Number(dueDate),
+      maxMarks: maxMarks ? Number(maxMarks) : null,
+      allowLate: allowLate === true,
       createdBy: user.id,
       createdAt: Date.now(),
     });
