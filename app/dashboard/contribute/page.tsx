@@ -109,7 +109,7 @@ export default function ContributePage() {
         </div>
         <div className="flex flex-col gap-1.5"><label className="text-sm font-medium text-text-primary">Subject *</label>
           {subjects.length === 0 && courseId && semesterId ? <p className="text-xs text-text-tertiary">No subjects added yet.</p> :
-            <select value={subject} onChange={(e) => setSubject(e.target.value)} required className={sc}><option value="" disabled>Select subject</option>{subjects.map((s) => <option key={s.id} value={s.name}>{s.name} ({s.code})</option>)}</select>}
+            <select value={subject} onChange={(e) => setSubject(e.target.value)} required className={sc}><option value="" disabled>Select subject</option>{subjects.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}</select>}
         </div>
         <Input label="Title *" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Unit 1 - Arrays and Linked Lists" required />
         <div className="flex flex-col gap-1.5"><label className="text-sm font-medium text-text-primary">Description</label>

@@ -207,7 +207,7 @@ export default function CreateAssignmentPage() {
               className="rounded-md border border-border bg-input-bg px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent">
               <option value="" disabled>Select subject</option>
               {subjects.map((s) => (
-                <option key={s.id} value={s.name}>{s.name} ({s.code})</option>
+                <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
               ))}
             </select>
           )}

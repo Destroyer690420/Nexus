@@ -145,7 +145,7 @@ export default function UploadPage() {
           ) : (
             <select value={subject} onChange={(e) => setSubject(e.target.value)} required className={selectClass}>
               <option value="" disabled>Select subject</option>
-              {subjects.map((s) => <option key={s.id} value={s.name}>{s.name} ({s.code})</option>)}
+              {subjects.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
             </select>
           )}
         </div>
