@@ -83,7 +83,12 @@ export default function UploadPage() {
       formData.append("unit", unit || ""); formData.append("tags", tags);
       if (file) formData.append("file", file);
       const res = await fetch("/api/resources/create", { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData });
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Upload failed"); }
+      if (!res.ok) {
+        let errorMessage = "Upload failed";
+        try { const err = await res.json(); errorMessage = err.error || errorMessage; }
+        catch { const text = await res.text(); if (text) errorMessage = text; }
+        throw new Error(errorMessage);
+      }
       setSuccess(`${title} uploaded successfully!`);
       setTitle(""); setDescription(""); setTags(""); setSubject(""); setUnit(""); setSemesterId(""); setFile(null);
     } catch (err) { setError((err as { message?: string })?.message || "Upload failed."); }

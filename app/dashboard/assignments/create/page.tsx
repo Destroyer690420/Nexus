@@ -118,8 +118,10 @@ export default function CreateAssignmentPage() {
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to create assignment");
+        let errorMessage = "Failed to create assignment";
+        try { const err = await res.json(); errorMessage = err.error || errorMessage; }
+        catch { const text = await res.text(); if (text) errorMessage = text; }
+        throw new Error(errorMessage);
       }
 
       setSuccess("Assignment created successfully!");
