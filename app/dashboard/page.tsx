@@ -66,16 +66,10 @@ export default function DashboardPage() {
     return (
       <div className="max-w-lg mx-auto">
         {/* Greeting */}
-        <div className="flex items-center gap-3 mb-1">
-          <div className="h-9 w-9 rounded-[var(--radius-md)] bg-accent flex items-center justify-center">
-            <span className="text-white text-sm font-bold">N</span>
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
-              Nexus
-            </h1>
-            <p className="text-sm text-text-secondary">Welcome back, {displayName} 👋</p>
-          </div>
+        <div className="mb-6 animate-fade-in">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
+            Hello, {displayName} 👋
+          </h1>
         </div>
 
         {/* Announcement Banner (only if there's a recent announcement) */}
