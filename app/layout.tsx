@@ -29,8 +29,6 @@ export default function RootLayout({
                   var theme = localStorage.getItem('theme-preference');
                   if (theme === 'dark' || theme === 'light') {
                     document.documentElement.setAttribute('data-theme', theme);
-                  } else {
-                    document.documentElement.setAttribute('data-theme', 'light');
                   }
                 } catch(e) {}
               })();
