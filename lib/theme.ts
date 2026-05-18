@@ -2,15 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-export type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark";
 
 const STORAGE_KEY = "theme-preference";
 
 export function getTheme(): Theme {
-  if (typeof window === "undefined") return "system";
+  if (typeof window === "undefined") return "light";
   const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark" || stored === "system") return stored;
-  return "system";
+  if (stored === "light" || stored === "dark") return stored;
+  return "light";
 }
 
 export function setTheme(theme: Theme) {
@@ -20,30 +20,26 @@ export function setTheme(theme: Theme) {
 }
 
 function applyTheme(theme: Theme) {
-  const root = document.documentElement;
-  if (theme === "system") {
-    root.removeAttribute("data-theme");
-  } else {
-    root.setAttribute("data-theme", theme);
-  }
+  document.documentElement.setAttribute("data-theme", theme);
 }
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>("system");
+  const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
     const current = getTheme();
     setThemeState(current);
     applyTheme(current);
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
-      if (getTheme() === "system") {
-        applyTheme("system");
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && (e.newValue === "light" || e.newValue === "dark")) {
+        setThemeState(e.newValue as Theme);
+        applyTheme(e.newValue as Theme);
       }
     };
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   const handleChange = useCallback((newTheme: Theme) => {
