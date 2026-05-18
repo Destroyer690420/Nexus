@@ -112,7 +112,6 @@ export default function ContributePage() {
     if (!subject) { setError("Please select a subject."); return; }
     if (type === "notes" && !unit) { setError("Please select a unit for notes."); return; }
     if (type === "pyqs" && years.length === 0) { setError("Please select at least one year for PYQs."); return; }
-    if (!description) { setError("Please provide a description."); return; }
     if (!file) { setError("Please upload a file."); return; }
 
     setSubmitting(true);
@@ -241,13 +240,12 @@ export default function ContributePage() {
         <Input label="Title *" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Unit 1 - Arrays and Linked Lists" required />
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-text-primary">Description *</label>
+          <label className="text-sm font-medium text-text-primary">Description</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Brief description of this resource..."
             rows={3}
-            required
             className="rounded-[var(--radius-md)] border border-border bg-input-bg px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-none transition-all duration-200"
           />
         </div>
