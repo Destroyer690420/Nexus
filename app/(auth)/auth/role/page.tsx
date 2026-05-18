@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
+import { supabase } from "@/lib/supabase";
 import { getCurrentUser, createUserData, getAuthErrorMessage } from "@/lib/supabase-auth";
 import type { UserRole } from "@/types";
 
@@ -22,8 +23,18 @@ export default function RoleSelectionPage() {
         return;
       }
       await createUserData(user.id, user.email || "", role);
-      if (role === "student") router.replace("/onboarding");
-      else router.replace("/waitlist");
+
+      if (role === "student") {
+        const { data: profile } = await supabase
+          .from("student_profiles")
+          .select("uid")
+          .eq("uid", user.id)
+          .single();
+        if (profile) router.replace("/dashboard");
+        else router.replace("/onboarding");
+      } else {
+        router.replace("/waitlist");
+      }
     } catch (err) {
       setError(getAuthErrorMessage(err));
       setLoading(false);

@@ -2,19 +2,15 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { onAuthChange, getUserData } from "@/lib/supabase-auth";
+import { onAuthChange } from "@/lib/supabase-auth";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const unsub = onAuthChange(async (user) => {
+    const unsub = onAuthChange((user) => {
       if (!user) return;
-      const data = await getUserData(user.id);
-      if (!data) router.replace("/auth/role");
-      else if (data.role === "student") router.replace("/onboarding");
-      else if (data.role === "faculty") router.replace("/waitlist");
-      else router.replace("/dashboard");
+      router.replace("/auth/role");
     });
     return unsub;
   }, [router]);
