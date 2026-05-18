@@ -17,7 +17,7 @@ export default function AuthLayout({
       
       {/* Content */}
       <div className="relative z-10 w-full max-w-[420px] px-5 animate-slide-up">
-        <div className="rounded-[var(--radius-xl)] border border-border/60 bg-surface/80 backdrop-blur-xl p-8 shadow-xl shadow-black/[0.03]">
+        <div className="rounded-[var(--radius-xl)] border border-border bg-surface p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           {children}
         </div>
       </div>

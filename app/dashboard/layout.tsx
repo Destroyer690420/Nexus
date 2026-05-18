@@ -178,7 +178,7 @@ export default function DashboardLayout({
       {/* ── MOBILE: Right-side drawer overlay ── */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-overlay backdrop-blur-sm z-40 animate-fade-in"
+          className="lg:hidden fixed inset-0 bg-overlay z-40 animate-fade-in"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -241,7 +241,7 @@ export default function DashboardLayout({
       {/* ── Main content area ── */}
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarCollapsed ? "lg:ml-[68px]" : "lg:ml-64"}`}>
         {/* Mobile top header */}
-        <header className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center justify-between">
+        <header className="lg:hidden sticky top-0 z-30 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-[var(--radius-sm)] bg-accent flex items-center justify-center">
               <span className="text-white text-xs font-bold">N</span>
@@ -262,7 +262,7 @@ export default function DashboardLayout({
         </main>
 
         {/* Mobile bottom navigation */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-background/90 backdrop-blur-lg border-t border-border">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.02)]">
           <div className="flex items-center justify-around py-2">
             <BottomNavItem
               href="/dashboard"

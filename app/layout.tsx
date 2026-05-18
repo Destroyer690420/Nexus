@@ -11,6 +11,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Nexus",
   description: "College resource and ERP platform",
+  appleWebApp: {
+    title: "Nexus",
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({

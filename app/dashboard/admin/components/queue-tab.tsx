@@ -31,7 +31,7 @@ function PreviewModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="absolute inset-0 bg-overlay backdrop-blur-sm animate-fade-in" onClick={onClose} />
+      <div className="absolute inset-0 bg-overlay animate-fade-in" onClick={onClose} />
       <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-2xl animate-scale-in">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-semibold text-text-primary">
