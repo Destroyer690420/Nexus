@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { onAuthChange, getUserData, logout } from "@/lib/supabase-auth";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { supabase } from "@/lib/supabase";
 import type { UserData, StudentProfile } from "@/types";
 
@@ -160,7 +159,6 @@ export default function DashboardLayout({
 
         {/* Bottom section */}
         <div className="border-t border-border p-3 flex flex-col gap-1">
-          {!sidebarCollapsed && <ThemeToggle />}
           <button
             onClick={handleLogout}
             className={`flex items-center gap-2 px-3 py-2 rounded-[var(--radius-md)] text-xs font-medium text-text-secondary hover:text-destructive hover:bg-destructive/5 transition-all duration-200 w-full cursor-pointer ${sidebarCollapsed ? "justify-center" : ""}`}
@@ -224,7 +222,6 @@ export default function DashboardLayout({
 
         {/* Logout at bottom */}
         <div className="border-t border-border p-3 flex flex-col gap-1">
-          <ThemeToggle />
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-md)] text-xs font-medium text-destructive hover:bg-destructive/5 transition-all duration-200 w-full cursor-pointer"
