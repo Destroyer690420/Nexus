@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
 export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get("Authorization");
@@ -14,9 +16,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const { fileName, contentType } = await req.json();
+    const { fileName, contentType, fileSize } = await req.json();
     if (!fileName) {
       return NextResponse.json({ error: "Missing fileName" }, { status: 400 });
+    }
+
+    if (fileSize && fileSize > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "File size exceeds the 50MB limit" }, { status: 413 });
     }
 
     await supabaseAdmin.storage.createBucket("resources", {
