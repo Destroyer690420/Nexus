@@ -12,31 +12,41 @@ export default function RoleSelectionPage() {
   const [role, setRole] = useState<UserRole>("student");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
     let active = true;
     const checkSession = async () => {
-      const user = await getCurrentUser();
-      if (!user || !active) return;
-
-      const data = await getUserData(user.id);
-      if (!active) return;
-      if (data && data.role) {
-        if (data.role === "student") {
-          const { data: profile } = await supabase
-            .from("student_profiles")
-            .select("uid")
-            .eq("uid", user.id)
-            .single();
-          if (!active) return;
-          if (profile) router.replace("/dashboard");
-          else router.replace("/onboarding");
-        } else if (data.role === "faculty") {
-          if (data.approved) router.replace("/dashboard");
-          else router.replace("/waitlist");
-        } else {
-          router.replace("/dashboard");
+      try {
+        const user = await getCurrentUser();
+        if (!user) {
+          if (active) setCheckingSession(false);
+          return;
         }
+
+        const data = await getUserData(user.id);
+        if (!active) return;
+        if (data && data.role) {
+          if (data.role === "student") {
+            const { data: profile } = await supabase
+              .from("student_profiles")
+              .select("uid")
+              .eq("uid", user.id)
+              .single();
+            if (!active) return;
+            if (profile) router.replace("/dashboard");
+            else router.replace("/onboarding");
+          } else if (data.role === "faculty") {
+            if (data.approved) router.replace("/dashboard");
+            else router.replace("/waitlist");
+          } else {
+            router.replace("/dashboard");
+          }
+        } else {
+          if (active) setCheckingSession(false);
+        }
+      } catch (err) {
+        if (active) setCheckingSession(false);
       }
     };
     checkSession();
@@ -73,6 +83,14 @@ export default function RoleSelectionPage() {
       setLoading(false);
     }
   };
+
+  if (checkingSession) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">

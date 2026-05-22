@@ -10,6 +10,7 @@ export default function AuthPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -17,10 +18,18 @@ export default function AuthPage() {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user ?? null;
-      if (!user || !active) return;
+      if (!user) {
+        if (active) setCheckingSession(false);
+        return;
+      }
+      if (!active) return;
 
       const data = await getUserData(user.id);
-      if (!data || !active) return;
+      if (!data) {
+        if (active) setCheckingSession(false);
+        return;
+      }
+      if (!active) return;
 
       if (data.role === "student") {
         const { data: profile } = await supabase
@@ -42,9 +51,17 @@ export default function AuthPage() {
     checkSession();
 
     const unsub = onAuthChange(async (user) => {
-      if (!user || !active) return;
+      if (!user) {
+        if (active) setCheckingSession(false);
+        return;
+      }
+      if (!active) return;
       const data = await getUserData(user.id);
-      if (!data || !active) return;
+      if (!data) {
+        if (active) setCheckingSession(false);
+        return;
+      }
+      if (!active) return;
 
       if (data.role === "student") {
         const { data: profile } = await supabase
@@ -69,6 +86,13 @@ export default function AuthPage() {
     };
   }, [router]);
 
+  if (checkingSession) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      </div>
+    );
+  }
 
   const handleGoogle = async () => {
     setLoading(true);

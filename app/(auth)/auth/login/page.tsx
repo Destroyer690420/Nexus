@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [checkingSession, setCheckingSession] = useState(true);
 
   const redirectUser = async (userId: string) => {
     const data = await getUserData(userId);
@@ -41,14 +42,26 @@ export default function LoginPage() {
   useEffect(() => {
     let active = true;
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user ?? null;
-      if (!user || !active) return;
-      await redirectUser(user.id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user ?? null;
+        if (!user) {
+          if (active) setCheckingSession(false);
+          return;
+        }
+        if (!active) return;
+        await redirectUser(user.id);
+      } catch (err) {
+        if (active) setCheckingSession(false);
+      }
     };
     checkSession();
     const unsub = onAuthChange(async (user) => {
-      if (!user || !active) return;
+      if (!user) {
+        if (active) setCheckingSession(false);
+        return;
+      }
+      if (!active) return;
       await redirectUser(user.id);
     });
     return () => {
@@ -85,6 +98,14 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (checkingSession) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">

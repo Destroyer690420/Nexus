@@ -12,9 +12,47 @@ function VerifyEmailContent() {
   const email = searchParams.get("email") || "";
   const [resending, setResending] = useState(false);
   const [message, setMessage] = useState("");
+  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
     let active = true;
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user ?? null;
+        if (!user || !user.email_confirmed_at) {
+          if (active) setCheckingSession(false);
+          return;
+        }
+
+        const data = await getUserData(user.id);
+        if (!active) return;
+        if (!data) {
+          if (active) setCheckingSession(false);
+          return;
+        }
+
+        if (data.role === "student") {
+          const { data: profile } = await supabase
+            .from("student_profiles")
+            .select("uid")
+            .eq("uid", user.id)
+            .single();
+          if (!active) return;
+          if (profile) router.replace("/dashboard");
+          else router.replace("/onboarding");
+        } else if (data.role === "faculty") {
+          if (data.approved) router.replace("/dashboard");
+          else router.replace("/waitlist");
+        } else {
+          router.replace("/dashboard");
+        }
+      } catch (err) {
+        if (active) setCheckingSession(false);
+      }
+    };
+    checkSession();
+
     const unsub = onAuthChange(async (user) => {
       if (!user || !active) return;
       if (user.email_confirmed_at) {
@@ -63,6 +101,14 @@ function VerifyEmailContent() {
   const handleLogin = () => {
     router.replace("/auth/login");
   };
+
+  if (checkingSession) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
