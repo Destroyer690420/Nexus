@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
 import {
@@ -8,7 +8,9 @@ import {
   signInWithGoogle,
   getUserData,
   getAuthErrorMessage,
+  onAuthChange,
 } from "@/lib/supabase-auth";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,10 +22,41 @@ export default function LoginPage() {
   const redirectUser = async (userId: string) => {
     const data = await getUserData(userId);
     if (!data) return router.replace("/auth/role");
-    if (data.role === "student") router.replace("/onboarding");
-    else if (data.role === "faculty") router.replace("/waitlist");
-    else router.replace("/dashboard");
+    if (data.role === "student") {
+      const { data: profile } = await supabase
+        .from("student_profiles")
+        .select("uid")
+        .eq("uid", userId)
+        .single();
+      if (profile) router.replace("/dashboard");
+      else router.replace("/onboarding");
+    } else if (data.role === "faculty") {
+      if (data.approved) router.replace("/dashboard");
+      else router.replace("/waitlist");
+    } else {
+      router.replace("/dashboard");
+    }
   };
+
+  useEffect(() => {
+    let active = true;
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
+      if (!user || !active) return;
+      await redirectUser(user.id);
+    };
+    checkSession();
+    const unsub = onAuthChange(async (user) => {
+      if (!user || !active) return;
+      await redirectUser(user.id);
+    });
+    return () => {
+      active = false;
+      unsub();
+    };
+  }, [router]);
+
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();

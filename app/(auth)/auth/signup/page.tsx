@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
 import {
   signUpWithEmail,
   signInWithGoogle,
   getAuthErrorMessage,
+  getUserData,
+  onAuthChange,
 } from "@/lib/supabase-auth";
+import { supabase } from "@/lib/supabase";
 import type { UserRole } from "@/types";
 
 export default function SignupPage() {
@@ -18,6 +21,61 @@ export default function SignupPage() {
   const [role, setRole] = useState<UserRole>("student");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
+      if (!user || !active) return;
+
+      const data = await getUserData(user.id);
+      if (!data || !active) return;
+
+      if (data.role === "student") {
+        const { data: profile } = await supabase
+          .from("student_profiles")
+          .select("uid")
+          .eq("uid", user.id)
+          .single();
+        if (!active) return;
+        if (profile) router.replace("/dashboard");
+        else router.replace("/onboarding");
+      } else if (data.role === "faculty") {
+        if (data.approved) router.replace("/dashboard");
+        else router.replace("/waitlist");
+      } else {
+        router.replace("/dashboard");
+      }
+    };
+    checkSession();
+    const unsub = onAuthChange(async (user) => {
+      if (!user || !active) return;
+      const data = await getUserData(user.id);
+      if (!data || !active) return;
+
+      if (data.role === "student") {
+        const { data: profile } = await supabase
+          .from("student_profiles")
+          .select("uid")
+          .eq("uid", user.id)
+          .single();
+        if (!active) return;
+        if (profile) router.replace("/dashboard");
+        else router.replace("/onboarding");
+      } else if (data.role === "faculty") {
+        if (data.approved) router.replace("/dashboard");
+        else router.replace("/waitlist");
+      } else {
+        router.replace("/dashboard");
+      }
+    });
+    return () => {
+      active = false;
+      unsub();
+    };
+  }, [router]);
+
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();

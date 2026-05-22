@@ -33,17 +33,60 @@ export default function OnboardingPage() {
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
+
+    const checkProfileAndLoad = async () => {
+      const user = await getCurrentUser();
+      if (!user) {
+        router.replace("/auth");
+        return;
+      }
+
+      // Check if student profile already exists
+      const { data: profile } = await supabase
+        .from("student_profiles")
+        .select("uid")
+        .eq("uid", user.id)
+        .single();
+
+      if (!active) return;
+      if (profile) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      // Load courses if onboarding is actually needed
+      const { data: coursesData } = await supabase.from("courses").select("*");
+      if (!active) return;
+      setCourses((coursesData || []) as Course[]);
+      setDataLoading(false);
+    };
+
+    checkProfileAndLoad();
+
     const unsub = onAuthChange(async (user) => {
       if (!user) {
         router.replace("/auth");
         return;
       }
-      const { data } = await supabase.from("courses").select("*");
-      setCourses((data || []) as Course[]);
-      setDataLoading(false);
+      const { data: profile } = await supabase
+        .from("student_profiles")
+        .select("uid")
+        .eq("uid", user.id)
+        .single();
+
+      if (!active) return;
+      if (profile) {
+        router.replace("/dashboard");
+      }
     });
-    return unsub;
+
+    return () => {
+      active = false;
+      unsub();
+    };
   }, [router]);
+
 
   useEffect(() => {
     if (!selectedCourse) {

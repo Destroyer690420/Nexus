@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { signInWithGoogle, getUserData, onAuthChange } from "@/lib/supabase-auth";
-import { getCurrentUser } from "@/lib/supabase-auth";
+import { supabase } from "@/lib/supabase";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -12,16 +12,63 @@ export default function AuthPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const unsub = onAuthChange(async (user) => {
-      if (!user) return;
+    let active = true;
+
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
+      if (!user || !active) return;
+
       const data = await getUserData(user.id);
-      if (!data) return;
-      if (data.role === "student") router.replace("/onboarding");
-      else if (data.role === "faculty") router.replace("/waitlist");
-      else router.replace("/dashboard");
+      if (!data || !active) return;
+
+      if (data.role === "student") {
+        const { data: profile } = await supabase
+          .from("student_profiles")
+          .select("uid")
+          .eq("uid", user.id)
+          .single();
+        if (!active) return;
+        if (profile) router.replace("/dashboard");
+        else router.replace("/onboarding");
+      } else if (data.role === "faculty") {
+        if (data.approved) router.replace("/dashboard");
+        else router.replace("/waitlist");
+      } else {
+        router.replace("/dashboard");
+      }
+    };
+
+    checkSession();
+
+    const unsub = onAuthChange(async (user) => {
+      if (!user || !active) return;
+      const data = await getUserData(user.id);
+      if (!data || !active) return;
+
+      if (data.role === "student") {
+        const { data: profile } = await supabase
+          .from("student_profiles")
+          .select("uid")
+          .eq("uid", user.id)
+          .single();
+        if (!active) return;
+        if (profile) router.replace("/dashboard");
+        else router.replace("/onboarding");
+      } else if (data.role === "faculty") {
+        if (data.approved) router.replace("/dashboard");
+        else router.replace("/waitlist");
+      } else {
+        router.replace("/dashboard");
+      }
     });
-    return unsub;
+
+    return () => {
+      active = false;
+      unsub();
+    };
   }, [router]);
+
 
   const handleGoogle = async () => {
     setLoading(true);
@@ -103,3 +150,4 @@ export default function AuthPage() {
     </div>
   );
 }
+

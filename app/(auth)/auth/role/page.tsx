@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
-import { getCurrentUser, createUserData, getAuthErrorMessage } from "@/lib/supabase-auth";
+import { getCurrentUser, createUserData, getAuthErrorMessage, getUserData } from "@/lib/supabase-auth";
 import type { UserRole } from "@/types";
 
 export default function RoleSelectionPage() {
@@ -12,6 +12,39 @@ export default function RoleSelectionPage() {
   const [role, setRole] = useState<UserRole>("student");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    const checkSession = async () => {
+      const user = await getCurrentUser();
+      if (!user || !active) return;
+
+      const data = await getUserData(user.id);
+      if (!active) return;
+      if (data && data.role) {
+        if (data.role === "student") {
+          const { data: profile } = await supabase
+            .from("student_profiles")
+            .select("uid")
+            .eq("uid", user.id)
+            .single();
+          if (!active) return;
+          if (profile) router.replace("/dashboard");
+          else router.replace("/onboarding");
+        } else if (data.role === "faculty") {
+          if (data.approved) router.replace("/dashboard");
+          else router.replace("/waitlist");
+        } else {
+          router.replace("/dashboard");
+        }
+      }
+    };
+    checkSession();
+    return () => {
+      active = false;
+    };
+  }, [router]);
+
 
   const handleContinue = async () => {
     setLoading(true);

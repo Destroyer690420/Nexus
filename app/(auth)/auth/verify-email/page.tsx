@@ -14,17 +14,35 @@ function VerifyEmailContent() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    let active = true;
     const unsub = onAuthChange(async (user) => {
-      if (!user) return;
+      if (!user || !active) return;
       if (user.email_confirmed_at) {
         const data = await getUserData(user.id);
-        if (data?.role === "student") router.replace("/onboarding");
-        else if (data?.role === "faculty") router.replace("/waitlist");
-        else router.replace("/dashboard");
+        if (!data || !active) return;
+        if (data.role === "student") {
+          const { data: profile } = await supabase
+            .from("student_profiles")
+            .select("uid")
+            .eq("uid", user.id)
+            .single();
+          if (!active) return;
+          if (profile) router.replace("/dashboard");
+          else router.replace("/onboarding");
+        } else if (data.role === "faculty") {
+          if (data.approved) router.replace("/dashboard");
+          else router.replace("/waitlist");
+        } else {
+          router.replace("/dashboard");
+        }
       }
     });
-    return unsub;
+    return () => {
+      active = false;
+      unsub();
+    };
   }, [router]);
+
 
   const handleResend = async () => {
     setResending(true);
