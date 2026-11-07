@@ -25,9 +25,13 @@ export async function signUpWithEmail(
   if (error) throw error;
   if (!data.user) throw new Error("Signup failed");
 
+  const token = data.session?.access_token;
   const res = await fetch("/api/auth/create-user", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({
       uid: data.user.id,
       email: data.user.email || email,
@@ -86,9 +90,14 @@ export async function createUserData(
   role: UserRole,
   name?: string
 ) {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token;
   const res = await fetch("/api/auth/create-user", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({ uid, email, role, name: name || "" }),
   });
   if (!res.ok) {

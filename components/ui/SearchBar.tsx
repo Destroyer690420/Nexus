@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { getSessionToken } from "@/lib/supabase-auth";
 
 interface SearchResult {
   resources: { id: string; title: string; type: string }[];
@@ -26,7 +27,20 @@ export function SearchBar() {
     }
     setLoading(true);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const token = await getSessionToken();
+      if (!token) {
+        setResults(null);
+        setLoading(false);
+        return;
+      }
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        setResults(null);
+        setLoading(false);
+        return;
+      }
       const data = await res.json();
       setResults(data);
     } catch {

@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, PageHeader, EmptyState, Badge } from "@/components/ui";
+import { getSessionToken } from "@/lib/supabase-auth";
 
 interface SearchResult {
   resources: { id: string; title: string; type: string; subjectId?: string }[];
@@ -22,7 +23,20 @@ function SearchContent() {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const token = await getSessionToken();
+        if (!token) {
+          setResults(null);
+          setLoading(false);
+          return;
+        }
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          setResults(null);
+          setLoading(false);
+          return;
+        }
         const data = await res.json();
         setResults(data);
       } catch { setResults(null); }

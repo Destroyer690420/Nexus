@@ -1,0 +1,2 @@
+D01 | Server route protection via proxy/middleware deferred | Sessions live in localStorage with plain supabase-js, so the server cannot see them; API routes verify Bearer tokens instead | rejected: cookie-based SSR sessions
+D02 | File bytes authorized by short-lived HMAC URL tokens, not Bearer headers | Browser download/navigation cannot attach Authorization headers; /api/files/token performs the role check | rejected: Bearer-only file GET

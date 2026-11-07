@@ -74,6 +74,8 @@ Run the SQL files in your Supabase SQL Editor in this order:
 1. `supabase-schema.sql` — Creates all tables and initial structure
 2. `rls-policies.sql` — Sets up Row Level Security policies
 3. `add-columns.sql` — Adds additional columns for student profiles
+4. `supabase/migrations/001_security.sql` — Hardens user/contribution/announcement RLS
+5. `supabase/migrations/002_drop_assignments.sql` — Drops legacy assignment tables (export data first)
 
 ### Seeding Data
 
