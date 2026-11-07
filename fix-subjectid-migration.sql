@@ -17,11 +17,3 @@ WHERE c."subjectId" = s.name
   AND (c."branchId" = s."branchId" OR (c."branchId" IS NULL AND s."branchId" IS NULL))
   AND c."semesterId" = s."semesterId";
 
--- Fix existing assignments with the same issue
-UPDATE public.assignments a
-SET "subjectId" = s.id
-FROM public.subjects s
-WHERE a."subjectId" = s.name
-  AND a."courseId" = s."courseId"
-  AND (a."branchId" = s."branchId" OR (a."branchId" IS NULL AND s."branchId" IS NULL))
-  AND a."semesterId" = s."semesterId";

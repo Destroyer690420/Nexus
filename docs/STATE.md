@@ -25,7 +25,7 @@ Email/Google auth; roles student/faculty/admin; faculty approval; resource brows
 Assignments is a resource type for faculty/admin material only. Students cannot contribute it. Submission, due-date and grading flows removed.
 
 ## Open
-Run supabase/migrations/002_drop_assignments.sql after exporting data, then 001_security.sql.
+Migrations pending human run: supabase/migrations/001_security.sql, then 002_drop_assignments.sql after exporting assignment data.
 Verify RLS coverage with the pg_tables query in 001.
 Server route protection via middleware deferred: localStorage sessions are invisible to the server (see DECISIONS D01).
 Telegram storage pipeline and worker remain in progress (not covered here).
