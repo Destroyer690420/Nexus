@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 
 interface SearchResult {
   resources: { id: string; title: string; type: string }[];
-  assignments: { id: string; title: string }[];
   subjects: { id: string; name: string; code: string }[];
   announcements: { id: string; title: string }[];
 }
@@ -57,7 +56,7 @@ export function SearchBar() {
   }, []);
 
   const totalResults = results
-    ? results.resources.length + results.assignments.length + results.subjects.length + results.announcements.length
+    ? results.resources.length + results.subjects.length + results.announcements.length
     : 0;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -117,20 +116,6 @@ export function SearchBar() {
                       className="w-full text-left py-2 text-sm text-text-primary hover:bg-surface-hover rounded-[var(--radius-sm)] px-2 transition-colors duration-150"
                     >
                       {r.title}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {results!.assignments.length > 0 && (
-                <div className="px-3 pb-2">
-                  <p className="text-xs font-medium text-text-tertiary uppercase mb-1 px-2">Assignments</p>
-                  {results!.assignments.slice(0, 5).map((a) => (
-                    <button
-                      key={a.id}
-                      onClick={() => { setIsOpen(false); router.push("/dashboard/assignments"); }}
-                      className="w-full text-left py-2 text-sm text-text-primary hover:bg-surface-hover rounded-[var(--radius-sm)] px-2 transition-colors duration-150"
-                    >
-                      {a.title}
                     </button>
                   ))}
                 </div>

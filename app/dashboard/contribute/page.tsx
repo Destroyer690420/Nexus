@@ -11,7 +11,7 @@ import type { ResourceType, StudentProfile } from "@/types";
 interface SubjectItem { id: string; name: string; code: string }
 
 const resourceTypes: { value: ResourceType; label: string }[] = [
-  { value: "notes", label: "Notes" }, { value: "pyqs", label: "PYQs" }, { value: "assignments", label: "Assignments" },
+  { value: "notes", label: "Notes" }, { value: "pyqs", label: "PYQs" },
   { value: "lab_manuals", label: "Lab Manuals" }, { value: "others", label: "Others" },
 ];
 const sc = "rounded-[var(--radius-md)] border border-border bg-input-bg px-3.5 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200 w-full";
@@ -121,7 +121,14 @@ export default function ContributePage() {
       if (!token) throw new Error("Not authenticated");
 
       const result = await uploadFile(file);
-      const fileUrl = result.publicUrl;
+      const fileUrl = result.publicUrl ?? "";
+      const storageFields = result.mode === "staging" ? {
+        storagePath: result.path,
+        fileSha256: result.sha256,
+        fileSize: result.size,
+        fileMime: file.type || "application/octet-stream",
+        fileName: file.name,
+      } : {};
 
       const res = await fetch("/api/contributions/create", {
         method: "POST",
@@ -138,6 +145,7 @@ export default function ContributePage() {
           years,
           tags,
           fileUrl,
+          ...storageFields,
         }),
       });
 

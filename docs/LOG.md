@@ -1,0 +1,1 @@
+N-001 | 2026-11-08 | [REFACTOR] | app/dashboard/assignments, app/api/{assignments,submissions,search}, lib/queries.ts, types/index.ts, supabase/migrations/002 | Removed assignment submission/grading flow; kept assignments resource type for faculty/admin material | undo: revert commit and restore migration backup

@@ -149,7 +149,7 @@ export default function RoleSelectionPage() {
               role === "faculty" ? "text-accent/80" : "text-text-secondary"
             }`}
           >
-            Upload resources, post assignments, and manage content
+            Upload resources, upload assignments, and manage content
           </div>
         </button>
       </div>

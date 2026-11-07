@@ -7,20 +7,14 @@ export async function GET(req: NextRequest) {
     const q = searchParams.get("q");
 
     if (!q || q.trim().length < 2) {
-      return NextResponse.json({ resources: [], assignments: [], subjects: [], announcements: [] });
+      return NextResponse.json({ resources: [], subjects: [], announcements: [] });
     }
 
     const query = `%${q.trim()}%`;
 
-    const [resourcesRes, assignmentsRes, subjectsRes, announcementsRes] = await Promise.all([
+    const [resourcesRes, subjectsRes, announcementsRes] = await Promise.all([
       supabaseAdmin
         .from("resources")
-        .select("*")
-        .or(`title.ilike.${query},description.ilike.${query}`)
-        .limit(10)
-        .order("createdAt", { ascending: false }),
-      supabaseAdmin
-        .from("assignments")
         .select("*")
         .or(`title.ilike.${query},description.ilike.${query}`)
         .limit(10)
@@ -41,7 +35,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       resources: resourcesRes.data || [],
-      assignments: assignmentsRes.data || [],
       subjects: subjectsRes.data || [],
       announcements: announcementsRes.data || [],
     });

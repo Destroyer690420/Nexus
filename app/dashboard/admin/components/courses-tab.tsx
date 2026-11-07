@@ -217,7 +217,7 @@ export function CoursesTab() {
         {courses.length === 0 && (
           <Card>
             <p className="text-sm text-text-secondary">
-              No courses yet. Click "Add Course" to get started.
+              No courses yet. Click &quot;Add Course&quot; to get started.
             </p>
           </Card>
         )}

@@ -16,7 +16,6 @@ ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.student_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contributions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 
 -- Users
@@ -68,16 +67,6 @@ DROP POLICY IF EXISTS "subjects_delete" ON public.subjects;
 CREATE POLICY "subjects_select" ON public.subjects FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "subjects_insert" ON public.subjects FOR INSERT WITH CHECK (public.get_user_role() IN ('admin', 'faculty'));
 CREATE POLICY "subjects_delete" ON public.subjects FOR DELETE USING (public.get_user_role() = 'admin');
-
--- Submissions: students manage their own; faculty/admin can read all
-DROP POLICY IF EXISTS "submissions_select" ON public.submissions;
-DROP POLICY IF EXISTS "submissions_insert" ON public.submissions;
-DROP POLICY IF EXISTS "submissions_update" ON public.submissions;
-CREATE POLICY "submissions_select" ON public.submissions FOR SELECT USING (
-  auth.uid() = "studentId" OR public.get_user_role() IN ('admin', 'faculty')
-);
-CREATE POLICY "submissions_insert" ON public.submissions FOR INSERT WITH CHECK (auth.uid() = "studentId");
-CREATE POLICY "submissions_update" ON public.submissions FOR UPDATE USING (auth.uid() = "studentId");
 
 -- Resources: authenticated can read all; faculty/admin can write
 DROP POLICY IF EXISTS "resources_select" ON public.resources;

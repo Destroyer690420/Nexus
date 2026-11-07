@@ -6,7 +6,6 @@ import { Card, PageHeader, EmptyState, Badge } from "@/components/ui";
 
 interface SearchResult {
   resources: { id: string; title: string; type: string; subjectId?: string }[];
-  assignments: { id: string; title: string; subjectId?: string }[];
   subjects: { id: string; name: string; code: string }[];
   announcements: { id: string; title: string }[];
 }
@@ -33,7 +32,7 @@ function SearchContent() {
 
   if (loading) return <div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" /></div>;
 
-  const total = results ? results.resources.length + results.assignments.length + results.subjects.length + results.announcements.length : 0;
+  const total = results ? results.resources.length + results.subjects.length + results.announcements.length : 0;
 
   return (
     <div className="max-w-3xl">
@@ -55,18 +54,6 @@ function SearchContent() {
                       {r.subjectId && <span className="text-xs text-text-tertiary">{r.subjectId}</span>}
                     </div>
                     <p className="text-sm font-medium text-text-primary mt-1">{r.title}</p>
-                  </Card>
-                ))}
-              </div>
-            </section>
-          )}
-          {results!.assignments.length > 0 && (
-            <section>
-              <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-accent" />Assignments</h3>
-              <div className="flex flex-col gap-2">
-                {results!.assignments.map((a) => (
-                  <Card key={a.id} className="p-4" interactive onClick={() => router.push("/dashboard/assignments")}>
-                    <p className="text-sm font-medium text-text-primary">{a.title}</p>
                   </Card>
                 ))}
               </div>

@@ -7,8 +7,6 @@ import type {
   Branch,
   ResourceType,
   UserRole,
-  Assignment,
-  Submission,
   Announcement,
 } from "@/types";
 
@@ -44,6 +42,7 @@ function mapBranch(row: Record<string, unknown>): Branch {
 }
 
 function mapContribution(row: Record<string, unknown>): Contribution {
+  const storageId = row.storageObjectId as string | undefined;
   return {
     id: row.id as string,
     type: row.type as ResourceType,
@@ -54,7 +53,9 @@ function mapContribution(row: Record<string, unknown>): Contribution {
     semesterId: row.semesterId as number,
     subjectId: row.subjectId as string,
     unit: row.unit as number | undefined,
-    fileUrl: row.fileUrl as string,
+    fileUrl: storageId
+      ? `/api/contributions/${row.id}/file`
+      : (row.fileUrl as string),
     tags: row.tags as string[],
     contributedBy: row.contributedBy as string,
     contributorName: row.contributorName as string,
@@ -67,6 +68,7 @@ function mapContribution(row: Record<string, unknown>): Contribution {
 }
 
 function mapResource(row: Record<string, unknown>): Resource {
+  const storageId = row.storageObjectId as string | undefined;
   return {
     id: row.id as string,
     type: row.type as ResourceType,
@@ -78,44 +80,14 @@ function mapResource(row: Record<string, unknown>): Resource {
     subjectId: row.subjectId as string,
     unit: row.unit as number | undefined,
     year: row.year as number | undefined,
-    fileUrl: row.fileUrl as string,
+    // Dual-read: storage-backed rows resolve to the stable Nexus URL;
+    // legacy rows keep their original URL until Phase 13 cutover.
+    fileUrl: storageId
+      ? `/api/resources/${row.id}/file`
+      : (row.fileUrl as string),
     tags: row.tags as string[],
     createdBy: row.createdBy as string,
     createdAt: row.createdAt as number,
-  };
-}
-
-function mapAssignment(row: Record<string, unknown>): Assignment {
-  return {
-    id: row.id as string,
-    title: row.title as string,
-    description: row.description as string,
-    courseId: row.courseId as string,
-    branchId: row.branchId as string | null,
-    semesterId: row.semesterId as number,
-    subjectId: row.subjectId as string,
-    fileUrl: row.fileUrl as string,
-    dueDate: row.dueDate as number,
-    maxMarks: row.maxMarks as number | null,
-    allowLate: row.allowLate as boolean,
-    createdBy: row.createdBy as string,
-    createdAt: row.createdAt as number,
-  };
-}
-
-function mapSubmission(row: Record<string, unknown>): Submission {
-  return {
-    id: row.id as string,
-    assignmentId: row.assignmentId as string,
-    studentId: row.studentId as string,
-    studentEmail: row.studentEmail as string | undefined,
-    fileUrl: row.fileUrl as string,
-    status: row.status as "pending" | "submitted" | "late",
-    submittedAt: row.submittedAt as number | null,
-    grade: row.grade as string | null,
-    feedback: row.feedback as string,
-    gradedBy: row.gradedBy as string | null,
-    gradedAt: row.gradedAt as number | null,
   };
 }
 
@@ -270,150 +242,6 @@ export async function deleteSubject(id: string): Promise<void> {
   if (error) throw error;
 }
 
-// ─── Assignments ────────────────────────────────────────
-
-export async function getAssignmentsForStudent(
-  courseId: string,
-  branchId: string | null,
-  semesterId: number
-): Promise<Assignment[]> {
-  let query = supabase
-    .from("assignments")
-    .select("*")
-    .eq("courseId", courseId)
-    .eq("semesterId", semesterId)
-    .order("dueDate", { ascending: true });
-
-  if (branchId) {
-    query = query.eq("branchId", branchId);
-  } else {
-    query = query.is("branchId", null);
-  }
-
-  const { data } = await query;
-  return (data || []).map((r) => mapAssignment(r as unknown as Record<string, unknown>));
-}
-
-export async function getAllAssignments(): Promise<Assignment[]> {
-  const { data } = await supabase
-    .from("assignments")
-    .select("*")
-    .order("createdAt", { ascending: false });
-  return (data || []).map((r) => mapAssignment(r as unknown as Record<string, unknown>));
-}
-
-export async function getAssignmentsByFaculty(
-  facultyId: string
-): Promise<Assignment[]> {
-  const { data } = await supabase
-    .from("assignments")
-    .select("*")
-    .eq("createdBy", facultyId)
-    .order("createdAt", { ascending: false });
-  return (data || []).map((r) => mapAssignment(r as unknown as Record<string, unknown>));
-}
-
-// ─── Submissions ────────────────────────────────────────
-
-export async function getSubmission(
-  assignmentId: string,
-  studentId: string
-): Promise<{ id: string; status: string; fileUrl: string } | null> {
-  const { data } = await supabase
-    .from("submissions")
-    .select("id, status, fileUrl")
-    .eq("assignmentId", assignmentId)
-    .eq("studentId", studentId)
-    .maybeSingle();
-  return data as { id: string; status: string; fileUrl: string } | null;
-}
-
-export async function getFullSubmission(
-  assignmentId: string,
-  studentId: string
-): Promise<Submission | null> {
-  const { data } = await supabase
-    .from("submissions")
-    .select("*")
-    .eq("assignmentId", assignmentId)
-    .eq("studentId", studentId)
-    .maybeSingle();
-  if (!data) return null;
-  return mapSubmission(data as unknown as Record<string, unknown>);
-}
-
-export async function upsertSubmission(
-  assignmentId: string,
-  studentId: string,
-  status: string,
-  fileUrl?: string
-): Promise<void> {
-  const existing = await getSubmission(assignmentId, studentId);
-  if (existing) {
-    await supabase
-      .from("submissions")
-      .update({
-        status,
-        fileUrl: fileUrl || existing.fileUrl,
-        submittedAt: status === "submitted" || status === "late" ? Date.now() : null,
-      })
-      .eq("id", existing.id);
-  } else {
-    await supabase.from("submissions").insert({
-      assignmentId,
-      studentId,
-      status,
-      fileUrl: fileUrl || "",
-      submittedAt: status === "submitted" || status === "late" ? Date.now() : null,
-    });
-  }
-}
-
-export async function getSubmissionsForAssignment(
-  assignmentId: string
-): Promise<Submission[]> {
-  const { data } = await supabase
-    .from("submissions")
-    .select("*")
-    .eq("assignmentId", assignmentId)
-    .order("submittedAt", { ascending: false });
-  return (data || []).map((r) => mapSubmission(r as unknown as Record<string, unknown>));
-}
-
-export async function getSubmissionsByStudent(
-  studentId: string
-): Promise<Submission[]> {
-  const { data } = await supabase
-    .from("submissions")
-    .select("*")
-    .eq("studentId", studentId)
-    .order("submittedAt", { ascending: false });
-  return (data || []).map((r) => mapSubmission(r as unknown as Record<string, unknown>));
-}
-
-export async function gradeSubmission(
-  submissionId: string,
-  grade: string | null,
-  feedback: string,
-  gradedBy: string
-): Promise<void> {
-  const { error } = await supabase
-    .from("submissions")
-    .update({
-      grade,
-      feedback,
-      gradedBy,
-      gradedAt: Date.now(),
-    })
-    .eq("id", submissionId);
-  if (error) throw error;
-}
-
-export async function deleteSubmission(id: string): Promise<void> {
-  const { error } = await supabase.from("submissions").delete().eq("id", id);
-  if (error) throw error;
-}
-
 // ─── Contributions / Content Queue ─────────────────────
 
 export async function getPendingContributions(): Promise<Contribution[]> {
@@ -447,6 +275,14 @@ export async function approveContribution(
 
   const c = contrib as unknown as Record<string, unknown>;
 
+  // Storage-backed contributions carry the object reference forward; the
+  // physical object is shared (ref-counted), never re-uploaded.
+  const storageObjectId = (c.storageObjectId as string | undefined) ?? null;
+  if (storageObjectId) {
+    const { addObjectRef } = await import("./storage/server/register-upload");
+    await addObjectRef(storageObjectId);
+  }
+
   const { error: resourceError } = await supabase.from("resources").insert({
     type: c.type,
     title: c.title,
@@ -457,6 +293,7 @@ export async function approveContribution(
     subjectId: c.subjectId || "",
     unit: c.unit || null,
     fileUrl: c.fileUrl || "",
+    ...(storageObjectId ? { storageObjectId } : {}),
     tags: c.tags || [],
     createdBy: c.contributedBy,
     createdAt: Date.now(),
@@ -580,12 +417,32 @@ export async function deleteResource(
   type: ResourceType,
   id: string
 ): Promise<void> {
+  // Capture the object reference before deleting the logical row.
+  const { data: row } = await supabase
+    .from("resources")
+    .select("storageObjectId")
+    .eq("id", id)
+    .eq("type", type)
+    .maybeSingle();
+  const storageObjectId = (row as { storageObjectId?: string } | null)?.storageObjectId;
+
   const { error } = await supabase
     .from("resources")
     .delete()
     .eq("id", id)
     .eq("type", type);
   if (error) throw error;
+
+  if (storageObjectId) {
+    const { enqueueJob } = await import("./storage/server/db");
+    await enqueueJob({
+      type: "delete_object",
+      payload: { objectId: storageObjectId },
+      // Per-object delete jobs deduplicate; the handler decrements refs and
+      // only removes the physical object when the last reference vanishes.
+      idempotencyKey: `delete:${storageObjectId}:${Date.now()}`,
+    });
+  }
 }
 
 // ─── Users ─────────────────────────────────────────────
@@ -724,16 +581,6 @@ export async function searchResources(query: string, limit = 20): Promise<Resour
     .limit(limit)
     .order("createdAt", { ascending: false });
   return (data || []).map((r) => mapResource(r as unknown as Record<string, unknown>));
-}
-
-export async function searchAssignments(query: string, limit = 20): Promise<Assignment[]> {
-  const { data } = await supabase
-    .from("assignments")
-    .select("*")
-    .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
-    .limit(limit)
-    .order("createdAt", { ascending: false });
-  return (data || []).map((r) => mapAssignment(r as unknown as Record<string, unknown>));
 }
 
 export async function searchSubjects(query: string, limit = 20): Promise<{ id: string; name: string; code: string; courseId: string; semesterId: number }[]> {

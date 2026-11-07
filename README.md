@@ -1,6 +1,6 @@
 # Nexus
 
-College resource and ERP platform. Share study materials, manage assignments, and stay updated with announcements — all in one place.
+College resource platform. Share study materials, browse faculty-posted assignments, and stay updated with announcements — all in one place.
 
 ## Features
 
@@ -13,8 +13,6 @@ College resource and ERP platform. Share study materials, manage assignments, an
 
 ### Faculty
 - Upload resources directly (notes, PYQs, assignments, lab manuals)
-- Create and manage assignments with due dates and late submission settings
-- Review and grade student submissions
 - Post announcements for students
 
 ### Admin
@@ -99,7 +97,7 @@ app/
   dashboard/       # Protected dashboard routes
     admin/         # Admin panel
     announcements/ # Announcement management
-    assignments/   # Assignment pages
+    assignments/   # Faculty-posted assignment material browser
     contribute/    # Student contribution form
     profile/       # User profile
     upload/        # Faculty upload form
