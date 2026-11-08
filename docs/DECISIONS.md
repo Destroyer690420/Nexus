@@ -12,3 +12,8 @@ D11 | File deduplication on (sha256, size_bytes) | Instant upload for identical 
 D12 | Client-side direct streaming to gateway via XHR | Offloads file body from Next.js server and enables accurate progress bar | rejected: Upload through Next.js API route
 D13 | Supabase free-tier automated keepalive | GitHub Actions scheduled REST query every 3 days avoids inactivity pause | rejected: Paid plan or manual dashboard visits
 D14 | Telegram-backed compressed daily backup excluding personal data | Offsite disaster recovery for study materials in backup channel; users and student_profiles excluded on purpose for privacy | rejected: Backing up personal user data or paid backup services
+D15 | Tactile "iOS meets Duolingo" design system | Playful chunky 3D ledge buttons, 2px card borders, Stickie mascot, collapsing titles | rejected: generic corporate/AI flat templates
+D16 | Strict warm no-blue palette (berry, sun, tangerine, fern) | Distinctive campus identity; zero blue/cyan/violet/indigo tokens; WCAG AA compliant | rejected: standard shadcn/tailwind blue/indigo palettes
+D17 | Squircle 28% radius avatars with 256x256 client resize | iOS continuous curvature aesthetic with zero server image manipulation cost | rejected: circular avatars or uncompressed uploads
+D18 | Ephemeral service-role test fixtures for E2E suite | Hermetic end-to-end tests without polluting production database or exposing secrets | rejected: hardcoded test credentials or manual testing
+D19 | Branch-isolated UI rebuild on ui-redesign | Protects production main branch while completing full multi-phase visual redesign | rejected: direct commits to main
