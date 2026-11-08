@@ -3,3 +3,4 @@ N-002 | 2026-11-08 | [SEC] | supabase/migrations/001_security.sql, app/api/searc
 N-003 | 2026-11-08 | [DOC] | docs/STATE.md, fix-subjectid-migration.sql | Finalized state from code; removed obsolete assignments repair SQL; migrations pending human run
 N-004 | 2026-11-08 | [DOC] | AGENTS.md | Added mandatory push-to-origin rule after every change set
 N-005 | 2026-11-08 | [FEAT] | gateway/, tsconfig.json, eslint.config.mjs | Created and deployed Cloudflare Pages file gateway skeleton with functional cache verification | undo: npx wrangler pages project delete nexus-files-7b4c
+N-006 | 2026-11-08 | [FIX] | supabase/migrations/002_drop_assignments.sql | Removed redundant drop policy statements that threw 42P01 when tables do not exist | undo: git revert HEAD
