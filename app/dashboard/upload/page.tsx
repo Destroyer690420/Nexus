@@ -2,235 +2,470 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input, PageHeader } from "@/components/ui";
+import Link from "next/link";
+import {
+  CheckCircle,
+} from "@phosphor-icons/react";
+import {
+  LargeTitleHeader,
+  SegmentedControl,
+  TextField,
+  Textarea,
+  Select,
+  FilePicker,
+  Button,
+  Stickie,
+} from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
 import { uploadFile } from "@/lib/upload";
-import type { UserData, ResourceType } from "@/types";
+import type { ResourceType } from "@/types";
 
-interface Course { id: string; name: string; code: string; hasBranches: boolean; semesters: number[] }
-interface Branch { id: string; name: string; code: string }
-interface SubjectItem { id: string; name: string; code: string }
+interface Course {
+  id: string;
+  name: string;
+  code: string;
+  hasBranches: boolean;
+  semesters: number[];
+}
 
-const resourceTypes: { value: ResourceType; label: string }[] = [
-  { value: "notes", label: "Notes" }, { value: "pyqs", label: "PYQs" }, { value: "assignments", label: "Assignments" },
-  { value: "lab_manuals", label: "Lab Manuals" }, { value: "others", label: "Others" },
-];
+interface Branch {
+  id: string;
+  name: string;
+  code: string;
+}
 
-const selectClass = "rounded-[var(--radius-md)] border border-border bg-input-bg px-3.5 py-2.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200 w-full";
+interface SubjectItem {
+  id: string;
+  name: string;
+  code: string;
+}
 
 export default function UploadPage() {
   const router = useRouter();
-  const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [type, setType] = useState<ResourceType>("notes");
   const [courses, setCourses] = useState<Course[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [courseId, setCourseId] = useState(""); const [branchId, setBranchId] = useState("");
-  const [semesterId, setSemesterId] = useState(""); const [subject, setSubject] = useState("");
+  const [courseId, setCourseId] = useState("");
+  const [branchId, setBranchId] = useState("");
+  const [semesterId, setSemesterId] = useState("");
   const [subjects, setSubjects] = useState<SubjectItem[]>([]);
-  const [unit, setUnit] = useState(""); const [title, setTitle] = useState("");
-  const [years, setYears] = useState<number[]>([]);
-  const [description, setDescription] = useState(""); const [tags, setTags] = useState("");
+  const [subject, setSubject] = useState("");
+  const [unit, setUnit] = useState("");
+  const [year, setYear] = useState<string>("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [tags, setTags] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 10 }, (_, i) => currentYear - i);
-  const [submitting, setSubmitting] = useState(false); const [error, setError] = useState(""); const [success, setSuccess] = useState("");
+
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
+    let active = true;
     const unsub = onAuthChange(async (user) => {
-      if (!user) { router.replace("/auth"); return; }
+      if (!user) {
+        router.replace("/auth");
+        return;
+      }
       const data = await getUserData(user.id);
-      if (!data || (data.role !== "faculty" && data.role !== "admin")) { router.replace("/dashboard"); return; }
-      setUserData(data);
+      if (!data || (data.role !== "faculty" && data.role !== "admin")) {
+        router.replace("/dashboard");
+        return;
+      }
       const { data: courseData } = await supabase.from("courses").select("*");
-      setCourses((courseData || []) as Course[]);
-      setLoading(false);
+      if (active) {
+        setCourses((courseData || []) as Course[]);
+        setLoading(false);
+      }
     });
-    return unsub;
+    return () => {
+      active = false;
+      unsub();
+    };
   }, [router]);
 
   useEffect(() => {
-    if (!courseId) { setBranches([]); setBranchId(""); return; }
+    if (!courseId) {
+      setBranches([]);
+      setBranchId("");
+      return;
+    }
     const course = courses.find((c) => c.id === courseId);
-    if (!course?.hasBranches) { setBranches([]); setBranchId(""); return; }
-    (async () => { const { data } = await supabase.from("branches").select("*").eq("courseId", courseId); setBranches((data || []) as Branch[]); setBranchId(""); })();
+    if (!course?.hasBranches) {
+      setBranches([]);
+      setBranchId("");
+      return;
+    }
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("branches")
+        .select("*")
+        .eq("courseId", courseId);
+      if (active) {
+        setBranches((data || []) as Branch[]);
+        setBranchId("");
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, [courseId, courses]);
 
   useEffect(() => {
-    if (!courseId || !semesterId) { setSubjects([]); setSubject(""); return; }
+    if (!courseId || !semesterId) {
+      setSubjects([]);
+      setSubject("");
+      return;
+    }
     const course = courses.find((c) => c.id === courseId);
     const branch = course?.hasBranches ? branchId : null;
-    if (course?.hasBranches && !branchId) { setSubjects([]); setSubject(""); return; }
+    if (course?.hasBranches && !branchId) {
+      setSubjects([]);
+      setSubject("");
+      return;
+    }
+    let active = true;
     (async () => {
-      let query = supabase.from("subjects").select("id, name, code").eq("courseId", courseId).eq("semesterId", Number(semesterId));
-      if (branch) { query = query.eq("branchId", branch); } else { query = query.is("branchId", null); }
+      let query = supabase
+        .from("subjects")
+        .select("id, name, code")
+        .eq("courseId", courseId)
+        .eq("semesterId", Number(semesterId));
+      if (branch) {
+        query = query.eq("branchId", branch);
+      } else {
+        query = query.is("branchId", null);
+      }
       const { data } = await query.order("name", { ascending: true });
-      setSubjects((data || []) as SubjectItem[]); setSubject("");
+      if (active) {
+        const subs = (data || []) as SubjectItem[];
+        setSubjects(subs);
+        setSubject(subs.length > 0 ? subs[0].id : "");
+      }
     })();
+    return () => {
+      active = false;
+    };
   }, [courseId, branchId, semesterId, courses]);
 
   const selectedCourse = courses.find((c) => c.id === courseId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !courseId || !semesterId || !subject) { setError("Please fill in all required fields."); return; }
-    if (type === "pyqs" && years.length === 0) { setError("Please select at least one year for PYQs."); return; }
-    setSubmitting(true); setError(""); setSuccess(""); setUploadProgress(0);
+    if (!title.trim() || !courseId || !semesterId || !subject) {
+      setError("Please fill in all required academic curriculum fields.");
+      return;
+    }
+    if (type === "pyqs" && !year) {
+      setError("Please select an exam year for PYQs.");
+      return;
+    }
+    if (!file) {
+      setError("Please select a file to upload.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+    setSuccess(false);
+    setUploadProgress(0);
+
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Not authenticated");
 
-      let fileUrl = "";
-      let fileId: string | null = null;
-      if (file) {
-        const result = await uploadFile(file, (pct) => setUploadProgress(pct));
-        fileId = result.fileId;
-        fileUrl = result.publicUrl ?? "";
-      }
+      const result = await uploadFile(file, (pct) => setUploadProgress(pct));
+      const fileId = result.fileId;
+      const fileUrl = result.publicUrl ?? "";
 
       const res = await fetch("/api/resources/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          type, title, description: description || "",
-          courseId, branchId: branchId || "", semesterId: Number(semesterId),
-          subjectId: subject, unit: unit || "", years, tags, fileUrl, fileId,
+          type,
+          title: title.trim(),
+          description: description.trim(),
+          courseId,
+          branchId: branchId || "",
+          semesterId: Number(semesterId),
+          subjectId: subject,
+          unit: unit || "",
+          years: year ? [Number(year)] : [],
+          tags,
+          fileUrl,
+          fileId,
         }),
       });
+
       if (!res.ok) {
-        let errorMessage = "Upload failed";
-        try { const err = await res.json(); errorMessage = err.error || errorMessage; }
-        catch { const text = await res.text(); if (text) errorMessage = text; }
+        let errorMessage = "Failed to create resource";
+        try {
+          const err = await res.json();
+          errorMessage = err.error || errorMessage;
+        } catch {
+          const text = await res.text();
+          if (text) errorMessage = text;
+        }
         throw new Error(errorMessage);
       }
-      setSuccess(`${title} uploaded successfully!`);
-      setTitle(""); setDescription(""); setTags(""); setSubject(""); setUnit(""); setSemesterId(""); setFile(null); setYears([]); setUploadProgress(null);
-    } catch (err) { setError((err as { message?: string })?.message || "Upload failed."); }
+
+      setSuccess(true);
+      setTitle("");
+      setDescription("");
+      setTags("");
+      setUnit("");
+      setYear("");
+      setFile(null);
+      setUploadProgress(null);
+    } catch (err) {
+      setError((err as { message?: string })?.message || "Upload failed.");
+    }
     setSubmitting(false);
   };
 
-  if (loading) return <div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" /></div>;
+  if (loading) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center">
+        <div className="flex flex-col items-center gap-3 animate-pulse">
+          <Stickie mood="think" size={80} />
+          <p className="font-display font-extrabold text-sm text-ink-3">
+            Loading upload forms...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-2xl">
-      <PageHeader title="Upload Resource" subtitle="Share study materials with students."
-        icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>} />
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <LargeTitleHeader
+        title="Upload Material"
+        subtitle="Faculty & Administrator direct publication to students"
+        parentHref="/dashboard"
+      />
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-text-primary">Resource Type</label>
-          <select value={type} onChange={(e) => setType(e.target.value as ResourceType)} className={selectClass}>
-            {resourceTypes.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-text-primary">Course *</label>
-            <select value={courseId} onChange={(e) => setCourseId(e.target.value)} required className={selectClass}>
-              <option value="" disabled>Select course</option>
-              {courses.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.code})</option>)}
-            </select>
+      {success && (
+        <div className="p-5 rounded-[22px] border-2 border-fern/30 bg-fern-tint text-center flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-fern text-white flex items-center justify-center">
+            <CheckCircle size={24} weight="fill" />
           </div>
-          {selectedCourse?.hasBranches && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-text-primary">Branch</label>
-              <select value={branchId} onChange={(e) => setBranchId(e.target.value)} className={selectClass}>
-                <option value="" disabled>Select branch</option>
-                {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            </div>
-          )}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-text-primary">Semester *</label>
-            <select value={semesterId} onChange={(e) => setSemesterId(e.target.value)} required className={selectClass}>
-              <option value="" disabled>Select semester</option>
-              {selectedCourse?.semesters.map((s) => <option key={s} value={String(s)}>Semester {s}</option>)}
-            </select>
+          <div>
+            <h3 className="font-display font-black text-base text-ink">
+              Material published directly!
+            </h3>
+            <p className="text-xs font-semibold text-ink-2 mt-0.5">
+              It is immediately available to enrolled students under the subject.
+            </p>
           </div>
-          <div className="flex flex-col gap-1.5">
-            {type === "pyqs" ? (
-              <>
-                <label className="text-sm font-medium text-text-primary">Years *</label>
-                <div className="flex flex-wrap gap-2">
-                  {yearOptions.map(y => (
-                    <button
-                      key={y}
-                      type="button"
-                      onClick={() => setYears(prev => prev.includes(y) ? prev.filter(x => x !== y) : [...prev, y])}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-200 ${years.includes(y) ? 'bg-accent text-white border-accent shadow-sm' : 'bg-input-bg text-text-secondary border-border hover:border-accent/50 hover:text-accent'}`}
-                    >
-                      {y}
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <>
-                <label className="text-sm font-medium text-text-primary">Unit</label>
-                <select value={unit} onChange={(e) => setUnit(e.target.value)} className={selectClass}>
-                  <option value="">None</option>
-                  {[1, 2, 3, 4].map((u) => <option key={u} value={String(u)}>Unit {u}</option>)}
-                </select>
-              </>
-            )}
+          <div className="flex items-center gap-2 pt-2">
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setSuccess(false)}
+            >
+              Upload more
+            </Button>
+            <Link href="/dashboard">
+              <Button variant="primary" size="md">
+                Go to dashboard
+              </Button>
+            </Link>
           </div>
         </div>
+      )}
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-text-primary">Subject *</label>
-          {subjects.length === 0 && courseId && semesterId ? (
-            <p className="text-xs text-text-tertiary">No subjects added yet. Ask an admin to add subjects via Admin Panel → Courses.</p>
-          ) : (
-            <select value={subject} onChange={(e) => setSubject(e.target.value)} required className={selectClass}>
-              <option value="" disabled>Select subject</option>
-              {subjects.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
-            </select>
-          )}
+      {error && (
+        <div
+          role="alert"
+          className="p-4 rounded-[16px] bg-crimson-tint border-2 border-crimson/20 text-crimson-deep text-xs font-semibold"
+        >
+          {error}
         </div>
+      )}
 
-        <Input label="Title *" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Unit 1 - Arrays and Linked Lists" required />
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-text-primary">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of this resource..."
-            rows={3} className="rounded-[var(--radius-md)] border border-border bg-input-bg px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-none transition-all duration-200" />
-        </div>
-
-        <Input label="Tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g. arrays, pointers, memory (comma separated)" />
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-text-primary">File</label>
-          <label className="flex items-center gap-3 cursor-pointer rounded-[var(--radius-md)] border border-dashed border-border hover:border-accent/30 hover:bg-accent-light/50 px-4 py-3 transition-all duration-200">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-tertiary"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <span className="text-sm text-text-secondary">{file ? file.name : "Click to upload a file"}</span>
-            <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" />
+      <form
+        onSubmit={handleSubmit}
+        className="p-6 rounded-[24px] border-2 border-line bg-surface shadow-[0_4px_0_var(--line-strong)] space-y-5"
+      >
+        <div>
+          <label className="block text-[13px] font-display font-extrabold text-ink mb-1.5">
+            Resource Type *
           </label>
+          <SegmentedControl
+            options={[
+              { value: "notes", label: "Notes" },
+              { value: "pyqs", label: "PYQs" },
+              { value: "assignments", label: "Assignment" },
+              { value: "lab_manuals", label: "Lab Manual" },
+            ]}
+            value={type}
+            onChange={(val) => setType(val as ResourceType)}
+          />
         </div>
 
-        {uploadProgress !== null && submitting && (
-          <div className="flex flex-col gap-1">
-            <div className="flex justify-between text-xs text-text-secondary">
-              <span>Uploading to Telegram...</span>
-              <span>{uploadProgress}%</span>
-            </div>
-            <div className="w-full bg-input-bg rounded-full h-2 overflow-hidden border border-border">
-              <div
-                className="bg-accent h-full transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          </div>
+        {/* Academic Cascading Pickers */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Select
+            label="Course / Program *"
+            value={courseId}
+            onChange={(e) => setCourseId(e.target.value)}
+            required
+            options={[
+              { value: "", label: "Select course..." },
+              ...courses.map((c) => ({
+                value: c.id,
+                label: `${c.name} (${c.code})`,
+              })),
+            ]}
+          />
+
+          {selectedCourse?.hasBranches ? (
+            <Select
+              label="Branch *"
+              value={branchId}
+              onChange={(e) => setBranchId(e.target.value)}
+              required
+              options={[
+                { value: "", label: "Select branch..." },
+                ...branches.map((b) => ({
+                  value: b.id,
+                  label: `${b.name} (${b.code})`,
+                })),
+              ]}
+            />
+          ) : (
+            <div className="hidden sm:block" />
+          )}
+
+          <Select
+            label="Semester *"
+            value={semesterId}
+            onChange={(e) => setSemesterId(e.target.value)}
+            required
+            disabled={!courseId}
+            options={[
+              { value: "", label: "Select semester..." },
+              ...(selectedCourse?.semesters || [1, 2, 3, 4, 5, 6, 7, 8]).map(
+                (s) => ({
+                  value: String(s),
+                  label: `Semester ${s}`,
+                })
+              ),
+            ]}
+          />
+
+          <Select
+            label="Subject *"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            required
+            disabled={subjects.length === 0}
+            options={[
+              {
+                value: "",
+                label:
+                  subjects.length === 0
+                    ? "Select course & semester first"
+                    : "Select subject...",
+              },
+              ...subjects.map((s) => ({
+                value: s.id,
+                label: `${s.name} (${s.code})`,
+              })),
+            ]}
+          />
+        </div>
+
+        {/* Unit or Year selector */}
+        {type === "notes" && (
+          <Select
+            label="Syllabus Unit"
+            value={unit}
+            onChange={(e) => setUnit(e.target.value)}
+            options={[
+              { value: "", label: "General / Entire Course" },
+              { value: "1", label: "Unit 1" },
+              { value: "2", label: "Unit 2" },
+              { value: "3", label: "Unit 3" },
+              { value: "4", label: "Unit 4" },
+              { value: "5", label: "Unit 5" },
+            ]}
+          />
         )}
 
-        {error && <div className="rounded-[var(--radius-md)] bg-destructive/10 border border-destructive/20 p-3"><p className="text-sm text-destructive">{error}</p></div>}
-        {success && <div className="rounded-[var(--radius-md)] bg-success/10 border border-success/20 p-3"><p className="text-sm text-success">{success}</p></div>}
+        {type === "pyqs" && (
+          <Select
+            label="Exam Year *"
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            required
+            options={[
+              { value: "", label: "Select year..." },
+              ...yearOptions.map((y) => ({
+                value: String(y),
+                label: `Year ${y}`,
+              })),
+            ]}
+          />
+        )}
 
-        <Button type="submit" loading={submitting} className="w-full h-11">Upload</Button>
+        <TextField
+          label="Document Title *"
+          placeholder="e.g. Experiment 4 - Dijkstra Algorithm Implementation"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+        />
+
+        <Textarea
+          label="Description (Optional)"
+          placeholder="Brief notes, submission deadline, or evaluation criteria..."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+        />
+
+        <TextField
+          label="Tags (Optional)"
+          placeholder="e.g. lab, solution, algorithms"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          helperText="Comma separated keywords"
+        />
+
+        <div className="pt-1">
+          <FilePicker
+            file={file}
+            onFileSelect={setFile}
+            progress={uploadProgress}
+            label="Document File (Max 20 MB) *"
+            disabled={submitting}
+          />
+        </div>
+
+        <div className="pt-3">
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={submitting}
+          >
+            Publish to students
+          </Button>
+        </div>
       </form>
     </div>
   );
