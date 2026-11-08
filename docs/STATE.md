@@ -7,9 +7,10 @@ Next.js 16 App Router, React 19, TypeScript, Tailwind v4. Supabase (auth, Postgr
 gateway (lib, functions, scripts, public); app/(auth) pages; app/dashboard (student/faculty/admin UI); app/api route handlers; components/ui; lib (queries, auth); types; scripts; tests; supabase/migrations; docs; .github/workflows.
 
 ## Tables
-users, courses, branches, student_profiles, subjects, contributions, resources, announcements, files.
+users, courses, branches, student_profiles, subjects, contributions, resources, announcements, files, upload_tickets.
 Security: users (own/admin select, own update, admin update, role/approved trigger), contributions (own pending insert, admin update), announcements (authenticated select, admin/faculty write).
 files: authenticated select non-secret columns only; tg_* columns restricted to service role; dedupe on (sha256, size_bytes).
+upload_tickets: tracks daily ticket issuance for rate limits (RLS service role only).
 resources and contributions have nullable "fileId" referencing files(id).
 Legacy assignments + submissions dropped via 002. Legacy storage objects dropped via 004.
 
@@ -30,6 +31,6 @@ E2E verified: 10/10 checks passed on deployed Cloudflare Pages gateway (upload, 
 Assignments is a resource type for faculty/admin material only. Students cannot contribute it. Submission, due-date and grading flows removed.
 
 ## Open
-Migrations 001 through 005 applied in production Supabase database.
+Migrations 001 through 005 applied in production Supabase database; 006_upload_tickets.sql pending run.
 Legacy study materials migrated to Telegram file gateway (12 files registered; 0 orphans).
 Server route protection via middleware deferred: localStorage sessions are invisible to the server (see DECISIONS D01).

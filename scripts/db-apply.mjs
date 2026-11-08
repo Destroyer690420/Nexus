@@ -45,6 +45,7 @@ async function run() {
     "003_guard_sql_editor.sql",
     "004_drop_legacy_storage.sql",
     "005_files.sql",
+    "006_upload_tickets.sql",
   ];
 
   const migrationsDir = path.resolve(process.cwd(), "supabase", "migrations");

@@ -15,7 +15,6 @@ const ALLOWED_EXTENSIONS = new Set([
 ]);
 
 const MAX_FILE_SIZE = 20_000_000; // 20 MB Telegram limit
-const DAILY_UPLOAD_LIMIT = 20;
 
 export async function POST(req: NextRequest) {
   try {
@@ -71,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     const cleanSha = sha256.toLowerCase();
 
-    // Deduplication check
+    // Deduplication check: duplicate files bypass ticket rate limits and return immediately
     const { data: existing } = await supabaseAdmin
       .from("files")
       .select("id")
@@ -86,36 +85,51 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Rate limit check (admins are exempt)
+    // Rate limit check based on upload_tickets (admins are exempt)
     const { data: profile } = await supabaseAdmin
       .from("users")
       .select("role")
       .eq("uid", user.id)
       .maybeSingle();
 
+    const dailyLimit = parseInt(process.env.UPLOAD_DAILY_LIMIT || "30", 10);
+
     if (profile?.role !== "admin") {
       const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { count } = await supabaseAdmin
-        .from("files")
+      const { count, error: countError } = await supabaseAdmin
+        .from("upload_tickets")
         .select("id", { count: "exact", head: true })
-        .eq("uploaded_by", user.id)
+        .eq("uid", user.id)
         .gte("created_at", dayAgo);
 
-      if ((count || 0) >= DAILY_UPLOAD_LIMIT) {
+      if (!countError && (count || 0) >= dailyLimit) {
         return NextResponse.json(
-          { error: `Daily upload limit reached (${DAILY_UPLOAD_LIMIT} files/day)` },
+          { error: `Daily upload limit reached (${dailyLimit} files/day)` },
           { status: 429 }
         );
       }
     }
 
-    // Mint short-lived upload ticket (5 minutes)
+    // Record ticket issuance in upload_tickets (service role only)
+    await supabaseAdmin.from("upload_tickets").insert({
+      uid: user.id,
+    });
+
+    // Opportunistically prune tickets older than 7 days
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    supabaseAdmin
+      .from("upload_tickets")
+      .delete()
+      .lt("created_at", sevenDaysAgo)
+      .then(() => {}, (err) => console.error("Prune tickets error:", err));
+
+    // Mint short-lived upload ticket (120 seconds)
     const nowSec = Math.floor(Date.now() / 1000);
     const ticket = mintToken({
       typ: "up",
       uid: user.id,
       maxBytes: size,
-      exp: nowSec + 300,
+      exp: nowSec + 120,
     });
 
     return NextResponse.json({
@@ -128,4 +142,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

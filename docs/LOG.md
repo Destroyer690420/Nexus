@@ -19,3 +19,4 @@ N-018 | 2026-11-08 | [FIX] | supabase/migrations/002_drop_assignments.sql | Remo
 N-019 | 2026-11-08 | [DOC] | docs/STATE.md | Noted migrations 001-005 applied and completed migration of 12 legacy files to Telegram | undo: git revert HEAD
 N-020 | 2026-11-08 | [FEAT] | package.json, app/layout.tsx | Added @vercel/analytics package and Analytics component to root layout | undo: git revert HEAD
 N-021 | 2026-11-08 | [FIX] | app/api/files/register/route.ts, tests/files-register.test.ts | Changed file registration to insert-only; preserves existing rows on unique violation | undo: git revert HEAD
+N-022 | 2026-11-08 | [FEAT] | supabase/migrations/006, app/api/files/ticket/, tests/ | Added upload_tickets table migration and 120s ticket rate limiting with tests | undo: git revert HEAD
