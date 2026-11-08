@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E23D73"/>
+      <stop offset="100%" stop-color="#C72256"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 3D bottom ledge for squircle container -->
+  <rect x="24" y="36" width="464" height="464" rx="116" fill="#801438"/>
+
+  <!-- Squircle container -->
+  <rect x="24" y="24" width="464" height="464" rx="116" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle inner top highlight -->
+  <rect x="28" y="28" width="456" height="220" rx="112" fill="#FFFFFF" opacity="0.08"/>
+
+  <!-- Stickie Mascot in center -->
+  <g transform="translate(116, 116) scale(2.0)">
+    <!-- Stickie Ledge -->
+    <path d="M 22 24 C 22 17.37 27.37 12 34 12 L 106 12 C 112.63 12 118 17.37 118 24 L 118 96 L 90 124 L 34 124 C 27.37 124 22 118.63 22 112 Z" transform="translate(0, 5)" fill="#D48B00"/>
+    
+    <!-- Stickie Body -->
+    <path d="M 22 24 C 22 17.37 27.37 12 34 12 L 106 12 C 112.63 12 118 17.37 118 24 L 118 96 L 90 124 L 34 124 C 27.37 124 22 118.63 22 112 Z" fill="#FFC800"/>
+
+    <!-- Folded Corner -->
+    <path d="M 118 96 L 90 96 L 90 124 Z" fill="#D48B00" opacity="0.85"/>
+    <path d="M 118 96 L 90 96 L 90 124 Z" fill="none" stroke="#D48B00" stroke-width="2" stroke-linejoin="round"/>
+
+    <!-- Eyes -->
+    <ellipse cx="50" cy="56" rx="6" ry="8" fill="#2A1830"/>
+    <circle cx="48" cy="53" r="2.2" fill="#FFFFFF"/>
+    
+    <ellipse cx="90" cy="56" rx="6" ry="8" fill="#2A1830"/>
+    <circle cx="88" cy="53" r="2.2" fill="#FFFFFF"/>
+
+    <!-- Cheeks -->
+    <circle cx="40" cy="68" r="6" fill="#FF6B8B" opacity="0.7"/>
+    <circle cx="100" cy="68" r="6" fill="#FF6B8B" opacity="0.7"/>
+
+    <!-- Happy Smile -->
+    <path d="M 60 68 Q 70 78 80 68" stroke="#2A1830" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

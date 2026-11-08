@@ -21,6 +21,16 @@ const figtree = Figtree({
 export const metadata: Metadata = {
   title: "Nexus",
   description: "Your campus library, in your pocket",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   appleWebApp: {
     title: "Nexus",
     statusBarStyle: "default",

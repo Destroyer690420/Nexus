@@ -32,3 +32,5 @@ N-031 | 2026-11-08 | [FEAT] | app/dashboard/{page,notes,pyqs,assignments,lab-man
 N-032 | 2026-11-08 | [FEAT] | app/dashboard/{search,announcements,contribute,my-contributions,upload}/ | Phase 5: Rebuilt search with grouped lists, announcements with confirm sheets, and contribute/upload with dropzones | undo: git revert HEAD
 
 N-033 | 2026-11-08 | [FEAT] | app/dashboard/{profile,admin}/, types/ | Phase 6: Rebuilt user profile with avatar resize, theme toggle, and 6-tab admin panel | undo: git revert HEAD
+
+N-034 | 2026-11-08 | [FEAT] | public/, app/{layout,manifest}.ts, scripts/make-icons.mjs | Phase 7: Generated PWA brand icons, maskable icons, favicons, and manifest | undo: git revert HEAD
