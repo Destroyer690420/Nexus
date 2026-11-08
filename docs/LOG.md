@@ -13,3 +13,4 @@ N-012 | 2026-11-08 | [DB] | supabase/migrations/005_files.sql | Added files tabl
 N-013 | 2026-11-08 | [FEAT] | lib/files-signing.ts, app/api/files/, tests/ | Added file token signing, ticket/register/link endpoints, tests, and updated resource creation | undo: git revert HEAD
 N-014 | 2026-11-08 | [FEAT] | lib/upload.ts, lib/file-client.ts, components/ui/PDFGrid.tsx, app/dashboard/ | Wired client upload to gateway with progress and fileId preview/download | undo: git revert HEAD
 N-015 | 2026-11-08 | [FEAT] | scripts/e2e-storage.mjs | Created and ran end-to-end storage verification suite; 10/10 checks passed | undo: git revert HEAD
+N-016 | 2026-11-08 | [FEAT] | scripts/, .github/workflows/ | Added keepalive and backup workflows, index backup/restore, migration, and orphans scripts | undo: git revert HEAD

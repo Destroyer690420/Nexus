@@ -4,7 +4,7 @@
 Next.js 16 App Router, React 19, TypeScript, Tailwind v4. Supabase (auth, Postgres, storage). Vitest. Stateless Cloudflare Pages file gateway (nexus-files-7b4c).
 
 ## Folders
-gateway (lib, functions, scripts, public); app/(auth) pages; app/dashboard (student/faculty/admin UI); app/api route handlers; components/ui; lib (queries, auth); types; scripts; tests; supabase/migrations; docs.
+gateway (lib, functions, scripts, public); app/(auth) pages; app/dashboard (student/faculty/admin UI); app/api route handlers; components/ui; lib (queries, auth); types; scripts; tests; supabase/migrations; docs; .github/workflows.
 
 ## Tables
 users, courses, branches, student_profiles, subjects, contributions, resources, announcements, files.
