@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
-import { getCurrentUser, createUserData, getAuthErrorMessage, getUserData } from "@/lib/supabase-auth";
+import { getCurrentUser, createUserData, getAuthErrorMessage } from "@/lib/supabase-auth";
+import { getAuthRedirectTarget } from "@/lib/auth-redirect";
 import type { UserRole } from "@/types";
 
 export default function RoleSelectionPage() {
@@ -24,28 +25,14 @@ export default function RoleSelectionPage() {
           return;
         }
 
-        const data = await getUserData(user.id);
+        const target = await getAuthRedirectTarget(user.id);
         if (!active) return;
-        if (data && data.role) {
-          if (data.role === "student") {
-            const { data: profile } = await supabase
-              .from("student_profiles")
-              .select("uid")
-              .eq("uid", user.id)
-              .single();
-            if (!active) return;
-            if (profile) router.replace("/dashboard");
-            else router.replace("/onboarding");
-          } else if (data.role === "faculty") {
-            if (data.approved) router.replace("/dashboard");
-            else router.replace("/waitlist");
-          } else {
-            router.replace("/dashboard");
-          }
+        if (target !== "/auth/role") {
+          router.replace(target);
         } else {
           if (active) setCheckingSession(false);
         }
-      } catch (err) {
+      } catch {
         if (active) setCheckingSession(false);
       }
     };

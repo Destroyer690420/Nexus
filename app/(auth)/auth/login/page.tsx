@@ -6,10 +6,10 @@ import { Button, Input } from "@/components/ui";
 import {
   loginWithEmail,
   signInWithGoogle,
-  getUserData,
   getAuthErrorMessage,
   onAuthChange,
 } from "@/lib/supabase-auth";
+import { getAuthRedirectTarget } from "@/lib/auth-redirect";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -21,22 +21,8 @@ export default function LoginPage() {
   const [checkingSession, setCheckingSession] = useState(true);
 
   const redirectUser = async (userId: string) => {
-    const data = await getUserData(userId);
-    if (!data) return router.replace("/auth/role");
-    if (data.role === "student") {
-      const { data: profile } = await supabase
-        .from("student_profiles")
-        .select("uid")
-        .eq("uid", userId)
-        .single();
-      if (profile) router.replace("/dashboard");
-      else router.replace("/onboarding");
-    } else if (data.role === "faculty") {
-      if (data.approved) router.replace("/dashboard");
-      else router.replace("/waitlist");
-    } else {
-      router.replace("/dashboard");
-    }
+    const target = await getAuthRedirectTarget(userId);
+    router.replace(target);
   };
 
   useEffect(() => {

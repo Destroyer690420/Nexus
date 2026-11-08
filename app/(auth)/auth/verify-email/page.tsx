@@ -4,7 +4,8 @@ import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
-import { onAuthChange, getUserData, getAuthErrorMessage } from "@/lib/supabase-auth";
+import { onAuthChange, getAuthErrorMessage } from "@/lib/supabase-auth";
+import { getAuthRedirectTarget } from "@/lib/auth-redirect";
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -25,29 +26,9 @@ function VerifyEmailContent() {
           return;
         }
 
-        const data = await getUserData(user.id);
-        if (!active) return;
-        if (!data) {
-          if (active) setCheckingSession(false);
-          return;
-        }
-
-        if (data.role === "student") {
-          const { data: profile } = await supabase
-            .from("student_profiles")
-            .select("uid")
-            .eq("uid", user.id)
-            .single();
-          if (!active) return;
-          if (profile) router.replace("/dashboard");
-          else router.replace("/onboarding");
-        } else if (data.role === "faculty") {
-          if (data.approved) router.replace("/dashboard");
-          else router.replace("/waitlist");
-        } else {
-          router.replace("/dashboard");
-        }
-      } catch (err) {
+        const target = await getAuthRedirectTarget(user.id);
+        if (active) router.replace(target);
+      } catch {
         if (active) setCheckingSession(false);
       }
     };
@@ -56,23 +37,8 @@ function VerifyEmailContent() {
     const unsub = onAuthChange(async (user) => {
       if (!user || !active) return;
       if (user.email_confirmed_at) {
-        const data = await getUserData(user.id);
-        if (!data || !active) return;
-        if (data.role === "student") {
-          const { data: profile } = await supabase
-            .from("student_profiles")
-            .select("uid")
-            .eq("uid", user.id)
-            .single();
-          if (!active) return;
-          if (profile) router.replace("/dashboard");
-          else router.replace("/onboarding");
-        } else if (data.role === "faculty") {
-          if (data.approved) router.replace("/dashboard");
-          else router.replace("/waitlist");
-        } else {
-          router.replace("/dashboard");
-        }
+        const target = await getAuthRedirectTarget(user.id);
+        if (active) router.replace(target);
       }
     });
     return () => {
