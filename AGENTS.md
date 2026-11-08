@@ -16,6 +16,7 @@ Docs live in /docs. Exactly 3 files. Never create others.
 
 ## During work
 - Group edits into change sets. Write ONE LOG line per set, not per file.
+- After every change set: commit and `git push` to origin. Never leave commits unpushed.
 - Update only the STATE.md lines affected (targeted edit, never rewrite the file).
 - DB changes: numbered SQL file in supabase/migrations/NNN_name.sql. Never edit an applied migration. Update the Tables section of STATE.md.
 - If code contradicts STATE.md: trust the code, fix STATE.md, log it as [DOC].

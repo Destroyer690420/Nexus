@@ -1,3 +1,4 @@
 N-001 | 2026-11-08 | [REFACTOR] | app/dashboard/assignments, app/api/{assignments,submissions,search}, lib/queries.ts, types/index.ts, supabase/migrations/002 | Removed assignment submission/grading flow; kept assignments resource type for faculty/admin material | undo: revert commit and restore migration backup
 N-002 | 2026-11-08 | [SEC] | supabase/migrations/001_security.sql, app/api/search, components/ui/SearchBar.tsx, lib/supabase-auth.ts, app/api/{resources,contributions}/[id]/file | Locked users/contributions/announcements RLS, added privilege trigger, authenticated+escaped search; API audit: only seed/storage secret routes and signed-file endpoints are non-Bearer by design
 N-003 | 2026-11-08 | [DOC] | docs/STATE.md, fix-subjectid-migration.sql | Finalized state from code; removed obsolete assignments repair SQL; migrations pending human run
+N-004 | 2026-11-08 | [DOC] | AGENTS.md | Added mandatory push-to-origin rule after every change set
