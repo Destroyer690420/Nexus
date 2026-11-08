@@ -1,3 +1,4 @@
+-- Baseline only. Apply supabase/migrations/*.sql in order afterwards. Never re-create RLS policies from this file.
 -- Nexus Supabase Schema
 -- Run this in Supabase SQL Editor
 
