@@ -23,6 +23,7 @@ export interface Contribution {
   subjectId?: string;
   unit?: number;
   fileUrl?: string;
+  fileId?: string | null;
   tags?: string[];
   contributedBy: string;
   contributorName?: string;
@@ -45,6 +46,7 @@ export interface Resource {
   unit?: number;
   year?: number;
   fileUrl?: string;
+  fileId?: string | null;
   tags?: string[];
   createdBy: string;
   createdAt: number;

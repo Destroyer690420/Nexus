@@ -10,3 +10,4 @@ N-009 | 2026-11-08 | [FEAT] | gateway/functions/upload.js, gateway/scripts/selft
 N-010 | 2026-11-08 | [FEAT] | gateway/wrangler.toml | Added https://nexxuus.vercel.app to ALLOWED_ORIGINS and redeployed gateway to Cloudflare Pages | undo: git revert HEAD
 N-011 | 2026-11-08 | [REFACTOR] | app/, lib/, package.json, supabase/migrations/ | Reconciled repo, removed MTProto storage pipeline, added migrations 003 and 004 | undo: git revert HEAD
 N-012 | 2026-11-08 | [DB] | supabase/migrations/005_files.sql | Added files table, RLS column grants, and foreign keys on resources and contributions | undo: drop table files cascade
+N-013 | 2026-11-08 | [FEAT] | lib/files-signing.ts, app/api/files/, tests/ | Added file token signing, ticket/register/link endpoints, tests, and updated resource creation | undo: git revert HEAD

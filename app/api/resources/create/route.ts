@@ -36,15 +36,28 @@ export async function POST(req: NextRequest) {
       years,
       tags: tagsStr = "",
       fileUrl = "",
+      fileId = null,
     } = await req.json();
 
     if (!type || !title || !courseId || semesterId === undefined || semesterId === null) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const resolvedFileId = typeof fileId === "string" && fileId ? fileId : null;
     const resolvedFileUrl = typeof fileUrl === "string" ? fileUrl : "";
-    if (!resolvedFileUrl) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+
+    if (resolvedFileId) {
+      const { data: fileRow } = await supabaseAdmin
+        .from("files")
+        .select("id")
+        .eq("id", resolvedFileId)
+        .maybeSingle();
+
+      if (!fileRow) {
+        return NextResponse.json({ error: "Referenced fileId not found" }, { status: 400 });
+      }
+    } else if (!resolvedFileUrl) {
+      return NextResponse.json({ error: "No file or fileId provided" }, { status: 400 });
     }
 
     const tags = typeof tagsStr === "string"
@@ -61,6 +74,7 @@ export async function POST(req: NextRequest) {
       subjectId,
       unit: unit ? Number(unit) : null,
       fileUrl: resolvedFileUrl,
+      fileId: resolvedFileId,
       tags,
       createdBy: user.id,
       createdAt: Date.now(),
@@ -81,6 +95,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       fileUrl: resolvedFileUrl,
+      fileId: resolvedFileId,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal error";

@@ -17,7 +17,7 @@ Legacy assignments + submissions dropped via 002. Legacy storage objects dropped
 Gateway: POST /upload, GET /f/[token].
 App: /auth, /auth/login, /auth/signup, /auth/role, /onboarding, /waitlist.
 /dashboard, /dashboard/notes, /pyqs, /assignments, /lab-manuals, /contribute, /my-contributions, /announcements, /search, /upload, /profile, /admin.
-API: /api/auth/create-user, /api/admin/{approve,seed}, /api/announcements/{create,delete}, /api/contributions/create, /api/resources/create, /api/search, /api/upload-url.
+API: /api/auth/create-user, /api/admin/{approve,seed}, /api/announcements/{create,delete}, /api/contributions/create, /api/resources/create, /api/files/{ticket,register,link}, /api/search.
 
 ## Env
 Cloudflare Pages (nexus-files-7b4c.pages.dev): BOT_TOKEN, STORAGE_CHANNEL_ID, LINK_SIGNING_SECRET, ALLOWED_ORIGINS; unused: SUPABASE_URL, SUPABASE_ANON_KEY.
