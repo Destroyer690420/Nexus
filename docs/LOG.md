@@ -12,3 +12,4 @@ N-011 | 2026-11-08 | [REFACTOR] | app/, lib/, package.json, supabase/migrations/
 N-012 | 2026-11-08 | [DB] | supabase/migrations/005_files.sql | Added files table, RLS column grants, and foreign keys on resources and contributions | undo: drop table files cascade
 N-013 | 2026-11-08 | [FEAT] | lib/files-signing.ts, app/api/files/, tests/ | Added file token signing, ticket/register/link endpoints, tests, and updated resource creation | undo: git revert HEAD
 N-014 | 2026-11-08 | [FEAT] | lib/upload.ts, lib/file-client.ts, components/ui/PDFGrid.tsx, app/dashboard/ | Wired client upload to gateway with progress and fileId preview/download | undo: git revert HEAD
+N-015 | 2026-11-08 | [FEAT] | scripts/e2e-storage.mjs | Created and ran end-to-end storage verification suite; 10/10 checks passed | undo: git revert HEAD
