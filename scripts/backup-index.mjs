@@ -40,11 +40,10 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false },
 });
 
+// Personal data (users, student_profiles) is excluded on purpose for privacy.
 const TABLES = [
-  "users",
   "courses",
   "branches",
-  "student_profiles",
   "subjects",
   "resources",
   "contributions",

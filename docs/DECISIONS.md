@@ -11,4 +11,4 @@ D10 | Telegram metadata strictly isolated via Postgres column grants | Non-secre
 D11 | File deduplication on (sha256, size_bytes) | Instant upload for identical files with zero storage waste and zero Telegram API calls | rejected: Storing redundant copies
 D12 | Client-side direct streaming to gateway via XHR | Offloads file body from Next.js server and enables accurate progress bar | rejected: Upload through Next.js API route
 D13 | Supabase free-tier automated keepalive | GitHub Actions scheduled REST query every 3 days avoids inactivity pause | rejected: Paid plan or manual dashboard visits
-D14 | Telegram-backed compressed daily backup | Zero-cost offsite disaster recovery for all metadata tables in dedicated backup channel | rejected: Paid backup services
+D14 | Telegram-backed compressed daily backup excluding personal data | Offsite disaster recovery for study materials in backup channel; users and student_profiles excluded on purpose for privacy | rejected: Backing up personal user data or paid backup services

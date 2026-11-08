@@ -73,12 +73,10 @@ async function main() {
   console.log(`Backup timestamp: ${dump.exportedAt || "Unknown"}`);
   console.log("Tables in backup:", Object.keys(dump.tables).join(", "));
 
-  // Restoration order respecting foreign keys
+  // Restoration order respecting foreign keys (personal data users/student_profiles excluded on purpose)
   const RESTORE_ORDER = [
     "courses",
     "branches",
-    "users",
-    "student_profiles",
     "subjects",
     "files",
     "resources",
