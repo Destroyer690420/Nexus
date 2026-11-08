@@ -7,3 +7,8 @@ D06 | SHA-256 is client-claimed in upload headers | Avoids hashing in Edge funct
 D07 | Upload tickets replayable until expiration | Stateless edge without replay store (accepted, exp 120 s) | rejected: KV or Durable Object nonce tracker
 D08 | No HTTP Range request support on gateway /f/<token> | Simplicity and compatibility with Telegram Bot API streaming and Edge cache | rejected: Chunked range proxy
 D09 | Inline Content-Disposition only for PDF and images | Prevents HTML/SVG stored XSS while allowing browser PDF/image viewing | rejected: Arbitrary inline content disposition
+D10 | Telegram metadata strictly isolated via Postgres column grants | Non-secret columns granted to authenticated; tg_* columns restricted to service role | rejected: Exposing tg_file_id to client
+D11 | File deduplication on (sha256, size_bytes) | Instant upload for identical files with zero storage waste and zero Telegram API calls | rejected: Storing redundant copies
+D12 | Client-side direct streaming to gateway via XHR | Offloads file body from Next.js server and enables accurate progress bar | rejected: Upload through Next.js API route
+D13 | Supabase free-tier automated keepalive | GitHub Actions scheduled REST query every 3 days avoids inactivity pause | rejected: Paid plan or manual dashboard visits
+D14 | Telegram-backed compressed daily backup | Zero-cost offsite disaster recovery for all metadata tables in dedicated backup channel | rejected: Paid backup services

@@ -26,31 +26,41 @@ College resource platform. Share study materials, browse faculty-posted assignme
 - Role-based access control (student, faculty, admin)
 - Dark, light, and system theme support
 - Responsive design for desktop and mobile
-- File uploads to Supabase Storage with signed URLs
+- Zero-cost Telegram-backed file gateway with HMAC link signing and Cloudflare Pages edge caching
 
 ## Tech Stack
 
 - **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS v4
-- **Auth & Database:** Supabase
-- **Storage:** Supabase Storage (signed URL uploads)
+- **Auth & Database:** Supabase (PostgreSQL, RLS)
+- **File Storage:** Telegram Bot API via stateless Cloudflare Pages Functions gateway (`nexus-files-7b4c.pages.dev`)
+- **Testing:** Vitest
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- A Supabase project with the schema applied
+- Node.js 20+
+- A Supabase project with migrations applied
+- A Cloudflare Pages gateway deployment (see `gateway/`)
 
 ### Environment Setup
 
 Create a `.env.local` file in the root directory:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# File Gateway & Telegram
+LINK_SIGNING_SECRET=your_hmac_signing_secret
+FILES_GATEWAY_URL=https://<your-pages-project>.pages.dev
+BOT_TOKEN=your_telegram_bot_token
+STORAGE_CHANNEL_ID=-100xxxxxxxxxx
+BACKUP_CHANNEL_ID=-100yyyyyyyyyy
 ```
 
 ### Installation
@@ -65,67 +75,21 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Database Setup
-
-Run the SQL files in your Supabase SQL Editor in this order:
-
-1. `supabase-schema.sql` — Creates all tables and initial structure
-2. `rls-policies.sql` — Sets up Row Level Security policies
-3. `add-columns.sql` — Adds additional columns for student profiles
-4. `supabase/migrations/001_security.sql` — Hardens user/contribution/announcement RLS
-5. `supabase/migrations/002_drop_assignments.sql` — Drops legacy assignment tables (export data first)
-
-### Seeding Data
-
-Run the seed script to populate courses, branches, subjects, and an admin user:
+### Verification & Operations
 
 ```bash
-node scripts/seed.mjs
+# Run unit tests
+npm test
+
+# Run End-to-End storage verification
+node scripts/e2e-storage.mjs
+
+# Backup metadata to Telegram
+node scripts/backup-index.mjs
+
+# Dry-run database restore
+node scripts/restore-index.mjs --dry-run
+
+# Check for orphaned files
+node scripts/orphans-report.mjs
 ```
-
-Or use the API endpoint (admin only):
-
-```
-POST /api/admin/seed
-```
-
-## Project Structure
-
-```
-app/
-  (auth)/          # Authentication pages (login, signup, onboarding)
-  dashboard/       # Protected dashboard routes
-    admin/         # Admin panel
-    announcements/ # Announcement management
-    assignments/   # Faculty-posted assignment material browser
-    contribute/    # Student contribution form
-    profile/       # User profile
-    upload/        # Faculty upload form
-  api/             # API routes
-components/
-  ui/              # Reusable UI components
-  providers/       # React context providers
-lib/
-  supabase.ts      # Supabase client
-  supabase-auth.ts # Authentication helpers
-  queries.ts       # Database queries
-  upload.ts        # File upload utilities
-  theme.ts         # Theme management
-types/
-  index.ts         # TypeScript type definitions
-```
-
-## Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-
-## License
-
-Private project.

@@ -126,7 +126,6 @@ async function main() {
       const sha256 = crypto.createHash("sha256").update(fileBuffer).digest("hex");
       const ext = path.extname(new URL(item.fileUrl).pathname) || ".pdf";
       const fileName = `${item.title.replace(/[^a-zA-Z0-9_-]/g, "_")}${ext}`;
-      const mime = res.headers.get("content-type") || "application/octet-stream";
 
       // Check deduplication in files table
       const { data: existingFile } = await supabase
