@@ -1,14 +1,14 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Nexus ERP',
+    name: 'Nexus',
     short_name: 'Nexus',
-    description: 'College resource and ERP platform',
+    description: 'Your campus library, in your pocket',
     start_url: '/',
     display: 'standalone',
-    background_color: '#fafbfc',
-    theme_color: '#4f46e5',
+    background_color: '#FBF5F8',
+    theme_color: '#D92B63',
     icons: [
       {
         src: '/icon-192x192.png',
@@ -24,8 +24,8 @@ export default function manifest(): MetadataRoute.Manifest {
         src: '/icon-512x512.png',
         sizes: '512x512',
         type: 'image/png',
-        purpose: 'maskable'
-      }
+        purpose: 'maskable',
+      },
     ],
-  }
+  };
 }

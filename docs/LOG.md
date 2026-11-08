@@ -26,3 +26,4 @@ N-025 | 2026-11-08 | [FEAT] | .github/workflows/keepalive.yml | Updated keepaliv
 N-026 | 2026-11-08 | [FEAT] | scripts/e2e-storage.mjs, tests/, docs/STATE.md | Added e2e verification checks for dedupe, ticket rate limiting, privacy and updated test typings | undo: git revert HEAD
 N-027 | 2026-11-08 | [FEAT] | package.json, .gitignore | Phase 0 safety baseline: tagged pre-ui-redesign, created branch ui-redesign, installed UI deps | undo: git checkout main
 N-028 | 2026-11-08 | [FEAT] | redesign/INVENTORY.md, lib/auth-redirect.ts, app/(auth)/ | Phase 1: documented full route inventory and extracted centralized auth redirect logic | undo: git revert HEAD
+N-029 | 2026-11-08 | [FEAT] | components/ui/, app/globals.css, app/layout.tsx, app/dev/ui/ | Phase 2: Built tactile design system, 29 UI components, and verified contrast/axe on /dev/ui | undo: git revert HEAD

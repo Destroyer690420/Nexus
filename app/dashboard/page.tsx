@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
 import { getRecentAnnouncementsForStudent, getAnnouncements } from "@/lib/queries";
-import { Card, Badge, PageHeader } from "@/components/ui";
+import { Card, Badge } from "@/components/ui";
 import type { UserData, Announcement, StudentProfile } from "@/types";
 
 export default function DashboardPage() {
@@ -110,7 +110,7 @@ export default function DashboardPage() {
               </svg>
             }
             label="Notes"
-            color="#4f6ef7"
+            color="#D92B63"
             onClick={() => router.push("/dashboard/notes")}
           />
           <HomeTile
@@ -124,7 +124,7 @@ export default function DashboardPage() {
               </svg>
             }
             label="PYQ"
-            color="#10b981"
+            color="#FFC21A"
             onClick={() => router.push("/dashboard/pyqs")}
           />
           <HomeTile
@@ -138,7 +138,7 @@ export default function DashboardPage() {
               </svg>
             }
             label="Assignments"
-            color="#f59e0b"
+            color="#FF7B2E"
             onClick={() => router.push("/dashboard/assignments")}
           />
           <HomeTile
@@ -150,7 +150,7 @@ export default function DashboardPage() {
               </svg>
             }
             label="Lab Manuals"
-            color="#8b5cf6"
+            color="#1E9A57"
             onClick={() => router.push("/dashboard/lab-manuals")}
           />
         </div>

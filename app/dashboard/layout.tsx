@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { onAuthChange, getUserData, logout } from "@/lib/supabase-auth";
-import { SearchBar } from "@/components/ui/SearchBar";
+import { SearchBar } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import type { UserData, StudentProfile } from "@/types";
 

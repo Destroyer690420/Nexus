@@ -1,21 +1,41 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Nunito, Figtree } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { Analytics } from "@vercel/analytics/react";
 
-const inter = Inter({
-  variable: "--font-inter",
+const nunito = Nunito({
   subsets: ["latin"],
+  weight: ["800", "900"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const figtree = Figtree({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Nexus",
-  description: "College resource and ERP platform",
+  description: "Your campus library, in your pocket",
   appleWebApp: {
     title: "Nexus",
     statusBarStyle: "default",
+    capable: true,
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FBF5F8" },
+    { media: "(prefers-color-scheme: dark)", color: "#1A1020" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -24,7 +44,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${nunito.variable} ${figtree.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -41,7 +65,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col font-sans bg-bg-petal text-ink">
         <AuthProvider>{children}</AuthProvider>
         <Analytics />
       </body>
