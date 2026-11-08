@@ -42,7 +42,6 @@ function mapBranch(row: Record<string, unknown>): Branch {
 }
 
 function mapContribution(row: Record<string, unknown>): Contribution {
-  const storageId = row.storageObjectId as string | undefined;
   return {
     id: row.id as string,
     type: row.type as ResourceType,
@@ -53,9 +52,7 @@ function mapContribution(row: Record<string, unknown>): Contribution {
     semesterId: row.semesterId as number,
     subjectId: row.subjectId as string,
     unit: row.unit as number | undefined,
-    fileUrl: storageId
-      ? `/api/contributions/${row.id}/file`
-      : (row.fileUrl as string),
+    fileUrl: row.fileUrl as string,
     tags: row.tags as string[],
     contributedBy: row.contributedBy as string,
     contributorName: row.contributorName as string,
@@ -68,7 +65,6 @@ function mapContribution(row: Record<string, unknown>): Contribution {
 }
 
 function mapResource(row: Record<string, unknown>): Resource {
-  const storageId = row.storageObjectId as string | undefined;
   return {
     id: row.id as string,
     type: row.type as ResourceType,
@@ -80,11 +76,7 @@ function mapResource(row: Record<string, unknown>): Resource {
     subjectId: row.subjectId as string,
     unit: row.unit as number | undefined,
     year: row.year as number | undefined,
-    // Dual-read: storage-backed rows resolve to the stable Nexus URL;
-    // legacy rows keep their original URL until Phase 13 cutover.
-    fileUrl: storageId
-      ? `/api/resources/${row.id}/file`
-      : (row.fileUrl as string),
+    fileUrl: row.fileUrl as string,
     tags: row.tags as string[],
     createdBy: row.createdBy as string,
     createdAt: row.createdAt as number,
@@ -275,14 +267,6 @@ export async function approveContribution(
 
   const c = contrib as unknown as Record<string, unknown>;
 
-  // Storage-backed contributions carry the object reference forward; the
-  // physical object is shared (ref-counted), never re-uploaded.
-  const storageObjectId = (c.storageObjectId as string | undefined) ?? null;
-  if (storageObjectId) {
-    const { addObjectRef } = await import("./storage/server/register-upload");
-    await addObjectRef(storageObjectId);
-  }
-
   const { error: resourceError } = await supabase.from("resources").insert({
     type: c.type,
     title: c.title,
@@ -293,7 +277,6 @@ export async function approveContribution(
     subjectId: c.subjectId || "",
     unit: c.unit || null,
     fileUrl: c.fileUrl || "",
-    ...(storageObjectId ? { storageObjectId } : {}),
     tags: c.tags || [],
     createdBy: c.contributedBy,
     createdAt: Date.now(),
@@ -417,32 +400,12 @@ export async function deleteResource(
   type: ResourceType,
   id: string
 ): Promise<void> {
-  // Capture the object reference before deleting the logical row.
-  const { data: row } = await supabase
-    .from("resources")
-    .select("storageObjectId")
-    .eq("id", id)
-    .eq("type", type)
-    .maybeSingle();
-  const storageObjectId = (row as { storageObjectId?: string } | null)?.storageObjectId;
-
   const { error } = await supabase
     .from("resources")
     .delete()
     .eq("id", id)
     .eq("type", type);
   if (error) throw error;
-
-  if (storageObjectId) {
-    const { enqueueJob } = await import("./storage/server/db");
-    await enqueueJob({
-      type: "delete_object",
-      payload: { objectId: storageObjectId },
-      // Per-object delete jobs deduplicate; the handler decrements refs and
-      // only removes the physical object when the last reference vanishes.
-      idempotencyKey: `delete:${storageObjectId}:${Date.now()}`,
-    });
-  }
 }
 
 // ─── Users ─────────────────────────────────────────────

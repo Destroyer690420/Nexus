@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { registerUploadedFile } from "@/lib/storage/server/register-upload";
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,11 +36,6 @@ export async function POST(req: NextRequest) {
       years,
       tags: tagsStr = "",
       fileUrl = "",
-      storagePath,
-      fileSha256,
-      fileSize,
-      fileMime,
-      fileName,
     } = await req.json();
 
     if (!type || !title || !courseId || semesterId === undefined || semesterId === null || !subjectId) {
@@ -53,20 +47,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    let storageObjectId: string | null = null;
     const resolvedFileUrl = typeof fileUrl === "string" ? fileUrl : "";
-    if (storagePath && fileSha256 && fileSize) {
-      const reg = await registerUploadedFile({
-        stagingBucket: process.env.STORAGE_STAGING_BUCKET ?? "staging",
-        stagingPath: String(storagePath),
-        size: Number(fileSize),
-        mimeType: fileMime ? String(fileMime) : undefined,
-        fileName: String(fileName ?? "file"),
-        sha256: String(fileSha256),
-        refCount: type === "pyqs" && Array.isArray(years) && years.length > 0 ? years.length : 1,
-      });
-      storageObjectId = reg.objectId;
-    } else if (!resolvedFileUrl) {
+    if (!resolvedFileUrl) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
@@ -84,7 +66,6 @@ export async function POST(req: NextRequest) {
       subjectId,
       unit: unit ? Number(unit) : null,
       fileUrl: resolvedFileUrl,
-      ...(storageObjectId ? { storageObjectId } : {}),
       tags,
       contributedBy: user.id,
       contributorName: user.email || "",
@@ -107,12 +88,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       fileUrl: resolvedFileUrl,
-      storageObjectId,
-      processing: Boolean(storageObjectId),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

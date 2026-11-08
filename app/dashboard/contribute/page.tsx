@@ -122,13 +122,6 @@ export default function ContributePage() {
 
       const result = await uploadFile(file);
       const fileUrl = result.publicUrl ?? "";
-      const storageFields = result.mode === "staging" ? {
-        storagePath: result.path,
-        fileSha256: result.sha256,
-        fileSize: result.size,
-        fileMime: file.type || "application/octet-stream",
-        fileName: file.name,
-      } : {};
 
       const res = await fetch("/api/contributions/create", {
         method: "POST",
@@ -145,7 +138,6 @@ export default function ContributePage() {
           years,
           tags,
           fileUrl,
-          ...storageFields,
         }),
       });
 

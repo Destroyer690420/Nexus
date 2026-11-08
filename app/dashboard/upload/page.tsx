@@ -86,7 +86,7 @@ export default function UploadPage() {
       let fileUrl = "";
       if (file) {
         const result = await uploadFile(file);
-        fileUrl = result.publicUrl;
+        fileUrl = result.publicUrl ?? "";
       }
 
       const res = await fetch("/api/resources/create", {

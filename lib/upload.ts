@@ -1,8 +1,15 @@
+"use client";
+
 import { supabase } from "./supabase";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
-export async function uploadFile(file: File): Promise<{ publicUrl: string; path: string }> {
+export interface UploadResult {
+  publicUrl: string;
+  path: string;
+}
+
+export async function uploadFile(file: File): Promise<UploadResult> {
   if (file.size > MAX_FILE_SIZE) {
     throw new Error("File size exceeds the 50MB limit");
   }
@@ -19,19 +26,21 @@ export async function uploadFile(file: File): Promise<{ publicUrl: string; path:
 
   if (!urlRes.ok) {
     let msg = "Failed to get upload URL";
-    try { const err = await urlRes.json(); msg = err.error || msg; } catch {}
+    try {
+      const err = await urlRes.json();
+      msg = err.error || msg;
+    } catch {}
     throw new Error(msg);
   }
 
-  const { signedUrl, publicUrl, path } = await urlRes.json();
+  const info = await urlRes.json();
 
-  const uploadRes = await fetch(signedUrl, {
+  const uploadRes = await fetch(info.signedUrl, {
     method: "PUT",
     body: file,
-    headers: { "Content-Type": file.type },
+    headers: { "Content-Type": file.type || "application/octet-stream" },
   });
-
   if (!uploadRes.ok) throw new Error("File upload to storage failed");
 
-  return { publicUrl, path };
+  return { path: info.path || "", publicUrl: info.publicUrl || "" };
 }

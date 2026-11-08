@@ -8,3 +8,4 @@ N-007 | 2026-11-08 | [DOC] | docs/LOG.md | Verified direct Telegram Bot API stor
 N-008 | 2026-11-08 | [FEAT] | gateway/ | Implemented stateless Telegram file gateway with HMAC tokens, streaming upload, synthetic cache, and selftests | undo: git revert HEAD
 N-009 | 2026-11-08 | [FEAT] | gateway/functions/upload.js, gateway/scripts/selftest.mjs | Deployed gateway to Cloudflare Pages and verified all 8 end-to-end integration checks | undo: git revert HEAD
 N-010 | 2026-11-08 | [FEAT] | gateway/wrangler.toml | Added https://nexxuus.vercel.app to ALLOWED_ORIGINS and redeployed gateway to Cloudflare Pages | undo: git revert HEAD
+N-011 | 2026-11-08 | [REFACTOR] | app/, lib/, package.json, supabase/migrations/ | Reconciled repo, removed MTProto storage pipeline, added migrations 003 and 004 | undo: git revert HEAD

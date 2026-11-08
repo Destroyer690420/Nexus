@@ -42,6 +42,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const resolvedFileUrl = typeof fileUrl === "string" ? fileUrl : "";
+    if (!resolvedFileUrl) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
+
     const tags = typeof tagsStr === "string"
       ? tagsStr.split(",").map((t: string) => t.trim()).filter(Boolean)
       : tagsStr;
@@ -55,7 +60,7 @@ export async function POST(req: NextRequest) {
       semesterId: Number(semesterId),
       subjectId,
       unit: unit ? Number(unit) : null,
-      fileUrl,
+      fileUrl: resolvedFileUrl,
       tags,
       createdBy: user.id,
       createdAt: Date.now(),
@@ -73,7 +78,10 @@ export async function POST(req: NextRequest) {
       if (insertError) throw insertError;
     }
 
-    return NextResponse.json({ success: true, fileUrl });
+    return NextResponse.json({
+      success: true,
+      fileUrl: resolvedFileUrl,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal error";
     return NextResponse.json({ error: message }, { status: 500 });
