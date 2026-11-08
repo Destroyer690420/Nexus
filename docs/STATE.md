@@ -7,8 +7,10 @@ Next.js 16 App Router, React 19, TypeScript, Tailwind v4. Supabase (auth, Postgr
 gateway (lib, functions, scripts, public); app/(auth) pages; app/dashboard (student/faculty/admin UI); app/api route handlers; components/ui; lib (queries, auth); types; scripts; tests; supabase/migrations; docs.
 
 ## Tables
-users, courses, branches, student_profiles, subjects, contributions, resources, announcements.
+users, courses, branches, student_profiles, subjects, contributions, resources, announcements, files.
 Security: users (own/admin select, own update, admin update, role/approved trigger), contributions (own pending insert, admin update), announcements (authenticated select, admin/faculty write).
+files: authenticated select non-secret columns only; tg_* columns restricted to service role; dedupe on (sha256, size_bytes).
+resources and contributions have nullable "fileId" referencing files(id).
 Legacy assignments + submissions dropped via 002. Legacy storage objects dropped via 004.
 
 ## Routes
@@ -26,6 +28,6 @@ Email/Google auth; roles student/faculty/admin; faculty approval; resource brows
 Assignments is a resource type for faculty/admin material only. Students cannot contribute it. Submission, due-date and grading flows removed.
 
 ## Open
-Migrations pending human run: 001_security.sql, 002_drop_assignments.sql, 003_guard_sql_editor.sql, 004_drop_legacy_storage.sql.
+Migrations pending human run: 001_security.sql, 002_drop_assignments.sql, 003_guard_sql_editor.sql, 004_drop_legacy_storage.sql, 005_files.sql.
 Verify RLS coverage with the pg_tables query in 001.
 Server route protection via middleware deferred: localStorage sessions are invisible to the server (see DECISIONS D01).
