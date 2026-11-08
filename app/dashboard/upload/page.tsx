@@ -37,6 +37,7 @@ export default function UploadPage() {
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 10 }, (_, i) => currentYear - i);
   const [submitting, setSubmitting] = useState(false); const [error, setError] = useState(""); const [success, setSuccess] = useState("");
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
     const unsub = onAuthChange(async (user) => {
@@ -77,15 +78,17 @@ export default function UploadPage() {
     e.preventDefault();
     if (!title || !courseId || !semesterId || !subject) { setError("Please fill in all required fields."); return; }
     if (type === "pyqs" && years.length === 0) { setError("Please select at least one year for PYQs."); return; }
-    setSubmitting(true); setError(""); setSuccess("");
+    setSubmitting(true); setError(""); setSuccess(""); setUploadProgress(0);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Not authenticated");
 
       let fileUrl = "";
+      let fileId: string | null = null;
       if (file) {
-        const result = await uploadFile(file);
+        const result = await uploadFile(file, (pct) => setUploadProgress(pct));
+        fileId = result.fileId;
         fileUrl = result.publicUrl ?? "";
       }
 
@@ -95,7 +98,7 @@ export default function UploadPage() {
         body: JSON.stringify({
           type, title, description: description || "",
           courseId, branchId: branchId || "", semesterId: Number(semesterId),
-          subjectId: subject, unit: unit || "", years, tags, fileUrl,
+          subjectId: subject, unit: unit || "", years, tags, fileUrl, fileId,
         }),
       });
       if (!res.ok) {
@@ -105,7 +108,7 @@ export default function UploadPage() {
         throw new Error(errorMessage);
       }
       setSuccess(`${title} uploaded successfully!`);
-      setTitle(""); setDescription(""); setTags(""); setSubject(""); setUnit(""); setSemesterId(""); setFile(null); setYears([]);
+      setTitle(""); setDescription(""); setTags(""); setSubject(""); setUnit(""); setSemesterId(""); setFile(null); setYears([]); setUploadProgress(null);
     } catch (err) { setError((err as { message?: string })?.message || "Upload failed."); }
     setSubmitting(false);
   };
@@ -208,6 +211,21 @@ export default function UploadPage() {
             <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" />
           </label>
         </div>
+
+        {uploadProgress !== null && submitting && (
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between text-xs text-text-secondary">
+              <span>Uploading to Telegram...</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="w-full bg-input-bg rounded-full h-2 overflow-hidden border border-border">
+              <div
+                className="bg-accent h-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {error && <div className="rounded-[var(--radius-md)] bg-destructive/10 border border-destructive/20 p-3"><p className="text-sm text-destructive">{error}</p></div>}
         {success && <div className="rounded-[var(--radius-md)] bg-success/10 border border-success/20 p-3"><p className="text-sm text-success">{success}</p></div>}

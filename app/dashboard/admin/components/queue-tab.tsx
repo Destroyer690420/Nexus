@@ -8,7 +8,72 @@ import {
   rejectContribution,
 } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/supabase-auth";
+import { useFileLink } from "@/lib/file-client";
 import type { Contribution } from "@/types";
+
+function ContributionFilePreview({ item }: { item: Contribution }) {
+  const fileRef = item.fileId || item.fileUrl;
+  const { url, loading, error } = useFileLink(fileRef, "inline");
+
+  if (!fileRef) {
+    return (
+      <div className="rounded-[var(--radius-md)] border border-border p-5 mb-5 text-center">
+        <p className="text-sm text-text-tertiary">No file attached</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="rounded-[var(--radius-md)] border border-border p-8 mb-5 text-center flex items-center justify-center">
+        <div className="animate-spin h-5 w-5 border-2 border-text-tertiary border-t-accent rounded-full mr-2" />
+        <span className="text-sm text-text-secondary">Loading file preview...</span>
+      </div>
+    );
+  }
+
+  if (error || !url) {
+    return (
+      <div className="rounded-[var(--radius-md)] border border-destructive/20 bg-destructive/5 p-4 mb-5 text-center">
+        <p className="text-sm text-destructive">{error || "Failed to load file preview"}</p>
+      </div>
+    );
+  }
+
+  const isPdf = url.toLowerCase().includes(".pdf") || item.title.toLowerCase().endsWith(".pdf");
+  const isImage = url.match(/\.(png|jpg|jpeg|gif|webp|svg)/i) || item.title.match(/\.(png|jpg|jpeg|gif|webp)$/i);
+
+  return (
+    <div className="rounded-[var(--radius-md)] border border-border overflow-hidden mb-5 bg-surface-hover">
+      {isPdf ? (
+        <iframe src={url} className="w-full h-[400px]" title="File preview" />
+      ) : isImage ? (
+        <div className="flex items-center justify-center p-4">
+          <img
+            src={url}
+            alt={item.title}
+            className="max-w-full max-h-[400px] object-contain rounded-[var(--radius-md)]"
+          />
+        </div>
+      ) : (
+        <div className="flex items-center gap-3 p-5">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-tertiary">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
+            <path d="M14 2v6h6"/>
+          </svg>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-accent hover:underline underline-offset-2"
+          >
+            Open file in new tab
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function PreviewModal({
   item,
@@ -23,9 +88,6 @@ function PreviewModal({
   onReject: (id: string) => void;
   actionUid: string | null;
 }) {
-  const isPdf = item.fileUrl?.toLowerCase().endsWith(".pdf");
-  const isImage = item.fileUrl?.match(/\.(png|jpg|jpeg|gif|webp|svg)$/i);
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -48,40 +110,7 @@ function PreviewModal({
         </div>
 
         {/* File Preview */}
-        {item.fileUrl ? (
-          <div className="rounded-[var(--radius-md)] border border-border overflow-hidden mb-5 bg-surface-hover">
-            {isPdf ? (
-              <iframe
-                src={item.fileUrl}
-                className="w-full h-[400px]"
-                title="File preview"
-              />
-            ) : isImage ? (
-              <div className="flex items-center justify-center p-4">
-                <img
-                  src={item.fileUrl}
-                  alt={item.title}
-                  className="max-w-full max-h-[400px] object-contain rounded-[var(--radius-md)]"
-                />
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 p-5">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-tertiary">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
-                  <path d="M14 2v6h6"/>
-                </svg>
-                <a href={item.fileUrl} target="_blank" rel="noopener noreferrer"
-                  className="text-sm text-accent hover:underline underline-offset-2">
-                  Open file in new tab
-                </a>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="rounded-[var(--radius-md)] border border-border p-5 mb-5 text-center">
-            <p className="text-sm text-text-tertiary">No file attached</p>
-          </div>
-        )}
+        <ContributionFilePreview item={item} />
 
         {/* Metadata */}
         <div className="space-y-3 mb-6">

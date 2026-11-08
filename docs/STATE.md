@@ -25,6 +25,7 @@ App: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_R
 
 ## Features
 Email/Google auth; roles student/faculty/admin; faculty approval; resource browsing by course/branch/semester; student contributions with admin approval queue; announcements; admin panel (faculty, courses, queue, resources, users); authenticated search (Bearer required).
+Client upload via signed gateway tickets with XHR progress reporting; preview and download supporting both fileId and legacy fileUrl.
 Assignments is a resource type for faculty/admin material only. Students cannot contribute it. Submission, due-date and grading flows removed.
 
 ## Open

@@ -35,6 +35,7 @@ export default function ContributePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
     const unsub = onAuthChange(async (user) => {
@@ -115,12 +116,14 @@ export default function ContributePage() {
     if (!file) { setError("Please upload a file."); return; }
 
     setSubmitting(true);
+    setUploadProgress(0);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Not authenticated");
 
-      const result = await uploadFile(file);
+      const result = await uploadFile(file, (pct) => setUploadProgress(pct));
+      const fileId = result.fileId;
       const fileUrl = result.publicUrl ?? "";
 
       const res = await fetch("/api/contributions/create", {
@@ -138,6 +141,7 @@ export default function ContributePage() {
           years,
           tags,
           fileUrl,
+          fileId,
         }),
       });
 
@@ -156,6 +160,7 @@ export default function ContributePage() {
       setUnit("");
       setFile(null);
       setYears([]);
+      setUploadProgress(null);
     } catch (err) {
       setError((err as { message?: string })?.message || "Upload failed.");
     }
@@ -260,6 +265,21 @@ export default function ContributePage() {
             <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" required />
           </label>
         </div>
+
+        {uploadProgress !== null && submitting && (
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between text-xs text-text-secondary">
+              <span>Uploading to Telegram...</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="w-full bg-input-bg rounded-full h-2 overflow-hidden border border-border">
+              <div
+                className="bg-accent h-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {error && <div className="rounded-[var(--radius-md)] bg-destructive/10 border border-destructive/20 p-3"><p className="text-sm text-destructive">{error}</p></div>}
         {success && <div className="rounded-[var(--radius-md)] bg-success/10 border border-success/20 p-3"><p className="text-sm text-success">{success}</p></div>}
