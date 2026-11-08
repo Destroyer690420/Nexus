@@ -28,3 +28,4 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           BACKUP_CHANNEL_ID: ${{ secrets.BACKUP_CHANNEL_ID }}
         run: node scripts/backup-index.mjs
+

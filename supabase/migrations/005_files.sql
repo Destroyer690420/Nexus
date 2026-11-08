@@ -41,3 +41,4 @@ drop policy if exists "files_select" on public.files;
 create policy "files_select" on public.files
   for select to authenticated
   using (true);
+

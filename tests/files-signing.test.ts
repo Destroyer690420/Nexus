@@ -169,3 +169,4 @@ describe("files-signing (lib/files-signing.ts)", () => {
     expect(verifiedInGateway?.fid).toBe("tg-interop-test");
   });
 });
+
