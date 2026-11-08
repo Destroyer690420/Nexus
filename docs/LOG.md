@@ -17,3 +17,4 @@ N-016 | 2026-11-08 | [FEAT] | scripts/, .github/workflows/ | Added keepalive and
 N-017 | 2026-11-08 | [DOC] | README.md, docs/DECISIONS.md, scripts/ | Documented architecture and decisions D10-D14, verified full test and e2e suite | undo: git revert HEAD
 N-018 | 2026-11-08 | [FIX] | supabase/migrations/002_drop_assignments.sql | Removed redundant drop policy statements causing 42P01 on missing tables | undo: git revert HEAD
 N-019 | 2026-11-08 | [DOC] | docs/STATE.md | Noted migrations 001-005 applied and completed migration of 12 legacy files to Telegram | undo: git revert HEAD
+N-020 | 2026-11-08 | [FEAT] | package.json, app/layout.tsx | Added @vercel/analytics package and Analytics component to root layout | undo: git revert HEAD
