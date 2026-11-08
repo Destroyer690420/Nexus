@@ -1,66 +1,144 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { PageHeader, PDFGrid } from "@/components/ui";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { PlusCircle, UploadSimple } from "@phosphor-icons/react";
+import {
+  LargeTitleHeader,
+  FileCard,
+  Stickie,
+  Button,
+} from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
 import { getResourcesBySubject } from "@/lib/queries";
 import type { StudentProfile, Resource } from "@/types";
 
 export default function LabManualsSubjectPage() {
-  const router = useRouter();
   const params = useParams();
   const subjectId = decodeURIComponent(params.subjectId as string);
   const [resources, setResources] = useState<Resource[]>([]);
   const [subjectName, setSubjectName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
+    let active = true;
     const unsub = onAuthChange(async (user) => {
-      if (!user) { router.replace("/auth"); return; }
+      if (!user) return;
       const data = await getUserData(user.id);
-      if (!data) { router.replace("/auth"); return; }
+      if (!data || !active) return;
+      setUserRole(data.role);
 
       const { data: subjectData } = await supabase
-        .from("subjects").select("name").eq("id", subjectId).single();
-      if (subjectData) setSubjectName(subjectData.name as string);
+        .from("subjects")
+        .select("name")
+        .eq("id", subjectId)
+        .single();
+      if (subjectData && active) setSubjectName(subjectData.name as string);
 
       if (data.role === "student") {
         const { data: profile } = await supabase
-          .from("student_profiles").select("*").eq("uid", user.id).single();
-        if (!profile) { router.replace("/onboarding"); return; }
+          .from("student_profiles")
+          .select("*")
+          .eq("uid", user.id)
+          .single();
+        if (!profile || !active) return;
         const p = profile as unknown as StudentProfile;
-        const res = await getResourcesBySubject("lab_manuals", p.courseId, p.branchId, p.semesterId, subjectId);
-        setResources(res);
+        const res = await getResourcesBySubject(
+          "lab_manuals",
+          p.courseId,
+          p.branchId,
+          p.semesterId,
+          subjectId
+        );
+        if (active) setResources(res);
       } else {
         const { data: res } = await supabase
-          .from("resources").select("*")
-          .eq("type", "lab_manuals").eq("subjectId", subjectId)
+          .from("resources")
+          .select("*")
+          .eq("type", "lab_manuals")
+          .eq("subjectId", subjectId)
           .order("createdAt", { ascending: false });
-        setResources((res || []) as unknown as Resource[]);
+        if (active) setResources((res || []) as unknown as Resource[]);
       }
-      setLoading(false);
+      if (active) setLoading(false);
     });
-    return unsub;
-  }, [router, subjectId]);
+    return () => {
+      active = false;
+      unsub();
+    };
+  }, [subjectId]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center">
+        <div className="flex flex-col items-center gap-3 animate-pulse">
+          <Stickie mood="think" size={80} />
+          <p className="font-display font-extrabold text-sm text-ink-3">
+            Loading lab manuals & experiment records...
+          </p>
+        </div>
       </div>
     );
   }
 
+  const canUpload = userRole === "admin" || userRole === "faculty";
+
   return (
-    <div className="max-w-2xl">
-      <PageHeader
-        title={subjectName || subjectId}
-        subtitle={`${resources.length} lab manual${resources.length !== 1 ? "s" : ""}`}
-        icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>}
+    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <LargeTitleHeader
+        title={subjectName || "Subject Lab Manuals"}
+        subtitle={`${resources.length} practical experiment manual${
+          resources.length !== 1 ? "s" : ""
+        }`}
+        parentHref="/dashboard/lab-manuals"
       />
-      <PDFGrid resources={resources} emptyMessage="No lab manuals uploaded for this subject yet." />
+
+      {resources.length === 0 ? (
+        <div className="p-8 rounded-[24px] border-2 border-line bg-surface text-center flex flex-col items-center gap-4">
+          <Stickie mood="think" size={110} />
+          <div className="space-y-1">
+            <h3 className="font-display font-black text-lg text-ink">
+              No lab manuals uploaded yet
+            </h3>
+            <p className="text-xs font-semibold text-ink-3 max-w-xs mx-auto">
+              Experiment sheets, code templates, and observation formats will appear here.
+            </p>
+          </div>
+          {canUpload ? (
+            <Link href="/dashboard/upload">
+              <Button variant="primary" size="md">
+                <UploadSimple size={18} weight="bold" />
+                Upload lab manual
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/dashboard/contribute">
+              <Button variant="primary" size="md">
+                <PlusCircle size={18} weight="bold" />
+                Contribute lab manual
+              </Button>
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {resources.map((res) => (
+            <FileCard
+              key={res.id}
+              id={res.id}
+              title={res.title}
+              fileRef={res.fileId || res.fileUrl || ""}
+              description={res.description}
+              unit={res.unit}
+              year={res.year}
+              tags={res.tags}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

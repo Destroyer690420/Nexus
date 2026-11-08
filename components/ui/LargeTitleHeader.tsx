@@ -8,6 +8,7 @@ export interface LargeTitleHeaderProps {
   title: string;
   subtitle?: string;
   parentName?: string;
+  parentHref?: string;
   onBack?: () => void;
   action?: React.ReactNode;
   icon?: React.ReactNode;
@@ -18,6 +19,7 @@ export function LargeTitleHeader({
   title,
   subtitle,
   parentName,
+  parentHref,
   onBack,
   action,
   icon,
@@ -34,9 +36,14 @@ export function LargeTitleHeader({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const hasBack = Boolean(parentName || parentHref || onBack);
+  const backLabel = parentName || "Back";
+
   const handleBackClick = () => {
     if (onBack) {
       onBack();
+    } else if (parentHref) {
+      router.push(parentHref);
     } else {
       router.back();
     }
@@ -51,14 +58,14 @@ export function LargeTitleHeader({
         }`}
       >
         <div className="flex items-center gap-1 min-w-0">
-          {parentName && (
+          {hasBack && (
             <button
               type="button"
               onClick={handleBackClick}
               className="inline-flex items-center gap-0.5 text-berry font-display font-extrabold text-[15px] cursor-pointer hover:opacity-80 flex-shrink-0"
             >
               <CaretLeft size={20} weight="bold" />
-              <span className="truncate max-w-[120px]">{parentName}</span>
+              <span className="truncate max-w-[120px]">{backLabel}</span>
             </button>
           )}
           <h2 className="text-[17px] font-display font-black text-ink truncate px-2">
@@ -70,7 +77,7 @@ export function LargeTitleHeader({
 
       {/* Expanded iOS-style Header */}
       <div>
-        {parentName && (
+        {hasBack && (
           <div className="mb-2">
             <button
               type="button"
@@ -78,7 +85,7 @@ export function LargeTitleHeader({
               className="inline-flex items-center gap-1 text-berry font-display font-extrabold text-[15px] cursor-pointer hover:opacity-80 active:translate-x-[-2px] transition-transform"
             >
               <CaretLeft size={20} weight="bold" />
-              <span>{parentName}</span>
+              <span>{backLabel}</span>
             </button>
           </div>
         )}
