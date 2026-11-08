@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui";
+import { Button, Stickie } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import { onAuthChange, logout } from "@/lib/supabase-auth";
 
@@ -11,37 +11,53 @@ export default function WaitlistPage() {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
+    let active = true;
     const unsub = onAuthChange(async (user) => {
       if (!user) {
-        router.replace("/auth");
+        if (active) router.replace("/auth");
         return;
       }
-      setEmail(user.email || "");
+      if (active) setEmail(user.email || "");
     });
-    return unsub;
+    return () => {
+      active = false;
+      unsub();
+    };
   }, [router]);
 
   useEffect(() => {
-    const channel = supabase
-      .channel("waitlist")
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "users",
-          filter: `uid=eq.${supabase.auth.getSession().then(({ data }) => data.session?.user?.id)}`,
-        },
-        (payload) => {
-          if ((payload.new as { approved?: boolean })?.approved === true) {
-            router.replace("/dashboard");
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const setupListener = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) return;
+
+      channel = supabase
+        .channel(`waitlist-${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "users",
+            filter: `uid=eq.${userId}`,
+          },
+          (payload) => {
+            if ((payload.new as { approved?: boolean })?.approved === true) {
+              router.replace("/dashboard");
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    };
+
+    setupListener();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [router]);
 
@@ -51,41 +67,35 @@ export default function WaitlistPage() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-light">
-        <svg
-          width="28"
-          height="28"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-accent"
-        >
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        </svg>
-      </div>
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
-          Pending Approval
-        </h1>
-        <p className="mt-2 text-sm text-text-secondary max-w-xs mx-auto">
-          Your account is pending admin approval for{" "}
-          <span className="font-medium text-text-primary">{email}</span>.
-          You&apos;ll be redirected automatically once approved.
-        </p>
+    <div className="flex flex-col items-center text-center">
+      <div className="mb-2">
+        <Stickie mood="sleepy" size={120} />
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-text-tertiary">
-        <div className="animate-spin h-3 w-3 border-2 border-text-tertiary border-t-accent rounded-full" />
-        Waiting for approval...
+      <h1 className="font-display font-black text-2xl tracking-tight text-ink">
+        Faculty approval pending
+      </h1>
+
+      <p className="mt-2 text-xs font-semibold text-ink-2 max-w-xs mx-auto leading-relaxed">
+        An admin is reviewing your credentials. You will get access automatically once approved.
+      </p>
+
+      {email && (
+        <div className="mt-3 px-3 py-1.5 rounded-[12px] bg-tangerine-tint border border-tangerine-deep/20 text-tangerine-deep font-mono text-xs font-bold">
+          {email}
+        </div>
+      )}
+
+      <div className="mt-6 flex items-center justify-center gap-2 text-xs font-bold text-ink-3">
+        <div className="w-2.5 h-2.5 rounded-full bg-sun animate-ping" />
+        <span>Waiting for admin approval...</span>
       </div>
 
-      <Button variant="ghost" onClick={handleLogout} className="mt-4">
-        Sign out
-      </Button>
+      <div className="mt-6 w-full max-w-xs">
+        <Button variant="ghost" size="md" fullWidth onClick={handleLogout}>
+          Sign out
+        </Button>
+      </div>
     </div>
   );
 }

@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui";
+import Link from "next/link";
+import { Button, Stickie } from "@/components/ui";
 import { signInWithGoogle, onAuthChange } from "@/lib/supabase-auth";
 import { getAuthRedirectTarget } from "@/lib/auth-redirect";
 import { supabase } from "@/lib/supabase";
 
-export default function AuthPage() {
+export default function AuthLandingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,7 +18,9 @@ export default function AuthPage() {
     let active = true;
 
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const user = session?.user ?? null;
       if (!user) {
         if (active) setCheckingSession(false);
@@ -49,8 +52,11 @@ export default function AuthPage() {
 
   if (checkingSession) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      <div className="flex flex-col items-center justify-center py-12 gap-3">
+        <Stickie mood="think" size={80} />
+        <p className="font-display font-extrabold text-sm text-ink-3">
+          Checking session...
+        </p>
       </div>
     );
   }
@@ -61,33 +67,42 @@ export default function AuthPage() {
     try {
       await signInWithGoogle();
     } catch (err) {
-      setError((err as { message?: string })?.message || "Something went wrong.");
+      setError((err as { message?: string })?.message || "Failed to sign in with Google.");
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-accent shadow-lg shadow-accent/25">
-          <span className="text-white text-xl font-bold">N</span>
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-          Nexus
-        </h1>
-        <p className="mt-1.5 text-sm text-text-secondary">
-          College resources, simplified.
-        </p>
+    <div className="flex flex-col items-center text-center">
+      <div className="mb-2">
+        <Stickie mood="wave" size={120} />
       </div>
 
-      <div className="flex flex-col gap-3">
+      <h1 className="font-display font-black text-3xl tracking-tight text-ink">
+        Nexus
+      </h1>
+      <p className="mt-1 text-sm font-semibold text-ink-2 max-w-[280px]">
+        Your campus library, in your pocket.
+      </p>
+
+      {error && (
+        <div
+          role="alert"
+          className="mt-4 w-full p-3 rounded-[16px] bg-crimson-tint border-2 border-crimson/20 text-crimson-deep text-xs font-semibold text-left"
+        >
+          {error}
+        </div>
+      )}
+
+      <div className="mt-7 w-full flex flex-col gap-2.5">
         <Button
           onClick={handleGoogle}
           loading={loading}
           variant="secondary"
-          className="w-full h-12 text-[13px]"
+          size="lg"
+          fullWidth
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="shrink-0" aria-hidden="true">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
               fill="#4285F4"
@@ -108,31 +123,22 @@ export default function AuthPage() {
           Continue with Google
         </Button>
 
-        <div className="relative my-2">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-surface/80 px-3 text-text-tertiary font-medium">or</span>
-          </div>
-        </div>
+        <Link href="/auth/signup" className="block w-full">
+          <Button variant="primary" size="lg" fullWidth>
+            Sign up with email
+          </Button>
+        </Link>
 
-        <Button
-          onClick={() => router.push("/auth/login")}
-          variant="ghost"
-          className="w-full h-12 text-[13px] text-text-secondary"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
-          Continue with Email
-        </Button>
+        <Link href="/auth/login" className="block w-full">
+          <Button variant="ghost" size="md" fullWidth>
+            I already have an account
+          </Button>
+        </Link>
       </div>
 
-      {error && (
-        <div className="rounded-[var(--radius-md)] bg-destructive/10 border border-destructive/20 p-3">
-          <p className="text-center text-sm text-destructive">{error}</p>
-        </div>
-      )}
+      <p className="mt-6 text-[11px] font-medium text-ink-3">
+        By continuing, you agree to Nexus campus guidelines.
+      </p>
     </div>
   );
 }
-

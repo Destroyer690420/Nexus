@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input } from "@/components/ui";
+import Link from "next/link";
+import { ArrowLeft, Eye, EyeSlash, Info } from "@phosphor-icons/react";
+import { Button, TextField, SegmentedControl, Stickie } from "@/components/ui";
 import {
   signUpWithEmail,
   signInWithGoogle,
@@ -18,6 +20,7 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<UserRole>("student");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,7 +30,9 @@ export default function SignupPage() {
     let active = true;
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         const user = session?.user ?? null;
         if (!user) {
           if (active) setCheckingSession(false);
@@ -56,7 +61,6 @@ export default function SignupPage() {
     };
   }, [router]);
 
-
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -83,105 +87,153 @@ export default function SignupPage() {
 
   if (checkingSession) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      <div className="flex flex-col items-center justify-center py-12 gap-3">
+        <Stickie mood="think" size={80} />
+        <p className="font-display font-extrabold text-sm text-ink-3">
+          Checking session...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
-          Create your account
+    <div className="flex flex-col">
+      <div className="flex items-center justify-between mb-4">
+        <Link
+          href="/auth"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-2 hover:text-ink transition-colors -ml-1 p-2 rounded-lg"
+          aria-label="Back to welcome"
+        >
+          <ArrowLeft size={16} weight="bold" />
+          <span>Back</span>
+        </Link>
+      </div>
+
+      <div className="flex flex-col items-center text-center mb-5">
+        <Stickie mood="wave" size={64} />
+        <h1 className="mt-2 font-display font-black text-2xl tracking-tight text-ink">
+          Join Nexus
         </h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Choose how you&apos;ll use Nexus
+        <p className="mt-1 text-xs font-semibold text-ink-2">
+          Start exploring study materials or contribute resources.
         </p>
       </div>
 
-      <form onSubmit={handleEmailSignup} className="flex flex-col gap-4">
-        <Input
-          label="Full Name"
+      {error && (
+        <div
+          role="alert"
+          className="mb-4 p-3 rounded-[16px] bg-crimson-tint border-2 border-crimson/20 text-crimson-deep text-xs font-semibold"
+        >
+          {error}
+        </div>
+      )}
+
+      {/* Role selection SegmentedControl */}
+      <div className="mb-4">
+        <label className="block text-[13px] font-display font-extrabold text-ink mb-1.5">
+          I am a:
+        </label>
+        <SegmentedControl
+          options={[
+            { value: "student", label: "Student" },
+            { value: "faculty", label: "Faculty" },
+          ]}
+          value={role}
+          onChange={(val) => setRole(val as UserRole)}
+        />
+        {role === "faculty" && (
+          <div className="mt-2 flex items-start gap-1.5 text-xs font-medium text-tangerine-deep bg-tangerine-tint p-2.5 rounded-[12px] border border-tangerine-deep/20">
+            <Info size={16} weight="bold" className="shrink-0 mt-0.5" />
+            <span>
+              Faculty accounts require admin approval before uploading materials.
+            </span>
+          </div>
+        )}
+      </div>
+
+      <form onSubmit={handleEmailSignup} className="flex flex-col gap-3.5">
+        <TextField
+          label="Full name"
           type="text"
-          placeholder="Your full name"
+          placeholder="e.g. Gaurav Sharma"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
+          autoComplete="name"
         />
-        <Input
-          label="Email"
+
+        <TextField
+          label="College email"
           type="email"
           placeholder="you@college.edu"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
         />
-        <Input
+
+        <TextField
           label="Password"
-          type="password"
+          type={showPassword ? "text" : "password"}
           placeholder="At least 6 characters"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          minLength={6}
           required
+          minLength={6}
+          autoComplete="new-password"
+          trailing={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="w-10 h-10 flex items-center justify-center text-ink-3 hover:text-ink transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeSlash size={20} weight="bold" />
+              ) : (
+                <Eye size={20} weight="bold" />
+              )}
+            </button>
+          }
         />
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-text-primary">
-            I am a
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setRole("student")}
-              className={`rounded-md border px-4 py-3 text-sm font-medium transition-all duration-150 ease-out cursor-pointer ${
-                role === "student"
-                  ? "border-accent bg-accent-light text-accent"
-                  : "border-border bg-surface text-text-secondary hover:bg-surface-hover"
-              }`}
-            >
-              <div className="font-semibold">Student</div>
-              <div className="text-xs mt-0.5 opacity-80">Access resources</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("faculty")}
-              className={`rounded-md border px-4 py-3 text-sm font-medium transition-all duration-150 ease-out cursor-pointer ${
-                role === "faculty"
-                  ? "border-accent bg-accent-light text-accent"
-                  : "border-border bg-surface text-text-secondary hover:bg-surface-hover"
-              }`}
-            >
-              <div className="font-semibold">Faculty</div>
-              <div className="text-xs mt-0.5 opacity-80">Upload & manage</div>
-            </button>
-          </div>
+        <div className="pt-2">
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={loading}
+          >
+            Create account
+          </Button>
         </div>
-
-        {error && <p className="text-sm text-destructive">{error}</p>}
-
-        <Button type="submit" loading={loading} className="w-full h-11">
-          Create account
-        </Button>
       </form>
 
-      <div className="relative">
+      <div className="relative my-4 flex items-center justify-center">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
+          <div className="w-full border-t border-line" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-text-tertiary">or</span>
-        </div>
+        <span className="relative bg-surface px-3 text-[11px] font-bold text-ink-3 uppercase tracking-wider">
+          or
+        </span>
       </div>
 
       <Button
         onClick={handleGoogle}
         loading={loading}
         variant="secondary"
-        className="w-full h-11"
+        size="md"
+        fullWidth
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          className="shrink-0"
+          aria-hidden="true"
+        >
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
             fill="#4285F4"
@@ -202,15 +254,14 @@ export default function SignupPage() {
         Continue with Google
       </Button>
 
-      <p className="text-center text-sm text-text-secondary">
-        Already have an account?{" "}
-        <button
-          onClick={() => router.push("/auth/login")}
-          className="text-accent hover:underline cursor-pointer font-medium"
+      <div className="mt-5 text-center">
+        <Link
+          href="/auth/login"
+          className="text-xs font-bold text-ink-2 hover:text-berry transition-colors"
         >
-          Sign in
-        </button>
-      </p>
+          Already have an account? <span className="text-berry underline">Sign in</span>
+        </Link>
+      </div>
     </div>
   );
 }

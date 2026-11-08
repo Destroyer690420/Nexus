@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input } from "@/components/ui";
+import Link from "next/link";
+import { ArrowLeft, Eye, EyeSlash } from "@phosphor-icons/react";
+import { Button, TextField, Stickie } from "@/components/ui";
 import {
   loginWithEmail,
   signInWithGoogle,
@@ -16,20 +18,26 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [checkingSession, setCheckingSession] = useState(true);
 
-  const redirectUser = async (userId: string) => {
-    const target = await getAuthRedirectTarget(userId);
-    router.replace(target);
-  };
+  const redirectUser = useCallback(
+    async (userId: string) => {
+      const target = await getAuthRedirectTarget(userId);
+      router.replace(target);
+    },
+    [router]
+  );
 
   useEffect(() => {
     let active = true;
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         const user = session?.user ?? null;
         if (!user) {
           if (active) setCheckingSession(false);
@@ -37,7 +45,7 @@ export default function LoginPage() {
         }
         if (!active) return;
         await redirectUser(user.id);
-      } catch (err) {
+      } catch {
         if (active) setCheckingSession(false);
       }
     };
@@ -54,8 +62,7 @@ export default function LoginPage() {
       active = false;
       unsub();
     };
-  }, [router]);
-
+  }, [redirectUser]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,64 +94,120 @@ export default function LoginPage() {
 
   if (checkingSession) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      <div className="flex flex-col items-center justify-center py-12 gap-3">
+        <Stickie mood="think" size={80} />
+        <p className="font-display font-extrabold text-sm text-ink-3">
+          Checking session...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
+    <div className="flex flex-col">
+      {/* Back to auth home */}
+      <div className="flex items-center justify-between mb-4">
+        <Link
+          href="/auth"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-2 hover:text-ink transition-colors -ml-1 p-2 rounded-lg"
+          aria-label="Back to welcome"
+        >
+          <ArrowLeft size={16} weight="bold" />
+          <span>Back</span>
+        </Link>
+      </div>
+
+      <div className="flex flex-col items-center text-center mb-6">
+        <Stickie mood="wave" size={72} />
+        <h1 className="mt-3 font-display font-black text-2xl tracking-tight text-ink">
           Welcome back
         </h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Sign in to your account
+        <p className="mt-1 text-xs font-semibold text-ink-2">
+          Sign in to access your notes, PYQs, and campus files.
         </p>
       </div>
 
-      <form onSubmit={handleEmailLogin} className="flex flex-col gap-4">
-        <Input
-          label="Email"
+      {error && (
+        <div
+          role="alert"
+          className="mb-4 p-3 rounded-[16px] bg-crimson-tint border-2 border-crimson/20 text-crimson-deep text-xs font-semibold"
+        >
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleEmailLogin} className="flex flex-col gap-3.5">
+        <TextField
+          label="College email"
           type="email"
           placeholder="you@college.edu"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
         />
-        <Input
+
+        <TextField
           label="Password"
-          type="password"
-          placeholder="Enter your password"
+          type={showPassword ? "text" : "password"}
+          placeholder="Enter password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
+          trailing={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="w-10 h-10 flex items-center justify-center text-ink-3 hover:text-ink transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeSlash size={20} weight="bold" />
+              ) : (
+                <Eye size={20} weight="bold" />
+              )}
+            </button>
+          }
         />
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
-
-        <Button type="submit" loading={loading} className="w-full h-11">
-          Sign in
-        </Button>
+        <div className="pt-2">
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={loading}
+          >
+            Sign in
+          </Button>
+        </div>
       </form>
 
-      <div className="relative">
+      <div className="relative my-5 flex items-center justify-center">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
+          <div className="w-full border-t border-line" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-text-tertiary">or</span>
-        </div>
+        <span className="relative bg-surface px-3 text-[11px] font-bold text-ink-3 uppercase tracking-wider">
+          or
+        </span>
       </div>
 
       <Button
         onClick={handleGoogle}
         loading={loading}
         variant="secondary"
-        className="w-full h-11"
+        size="md"
+        fullWidth
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          className="shrink-0"
+          aria-hidden="true"
+        >
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
             fill="#4285F4"
@@ -165,15 +228,14 @@ export default function LoginPage() {
         Continue with Google
       </Button>
 
-      <p className="text-center text-sm text-text-secondary">
-        Don&apos;t have an account?{" "}
-        <button
-          onClick={() => router.push("/auth/signup")}
-          className="text-accent hover:underline cursor-pointer font-medium"
+      <div className="mt-6 text-center">
+        <Link
+          href="/auth/signup"
+          className="text-xs font-bold text-ink-2 hover:text-berry transition-colors"
         >
-          Sign up
-        </button>
-      </p>
+          Need an account? <span className="text-berry underline">Sign up</span>
+        </Link>
+      </div>
     </div>
   );
 }
