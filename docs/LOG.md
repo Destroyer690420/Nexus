@@ -5,3 +5,4 @@ N-004 | 2026-11-08 | [DOC] | AGENTS.md | Added mandatory push-to-origin rule aft
 N-005 | 2026-11-08 | [FEAT] | gateway/, tsconfig.json, eslint.config.mjs | Created and deployed Cloudflare Pages file gateway skeleton with functional cache verification | undo: npx wrangler pages project delete nexus-files-7b4c
 N-006 | 2026-11-08 | [FIX] | supabase/migrations/002_drop_assignments.sql | Removed redundant drop policy statements that threw 42P01 when tables do not exist | undo: git revert HEAD
 N-007 | 2026-11-08 | [DOC] | docs/LOG.md | Verified direct Telegram Bot API storage channel send, getFile, download SHA-256, 20MB limit and deleteMessage
+N-008 | 2026-11-08 | [FEAT] | gateway/ | Implemented stateless Telegram file gateway with HMAC tokens, streaming upload, synthetic cache, and selftests | undo: git revert HEAD

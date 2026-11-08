@@ -4,7 +4,7 @@
 Next.js 16 App Router, React 19, TypeScript, Tailwind v4. Supabase (auth, Postgres, storage). Vitest. Telegram MTProto storage pipeline in progress under lib/storage + worker.
 
 ## Folders
-app/(auth) pages; app/dashboard (student/faculty/admin UI); app/api route handlers; components/ui; lib (queries, auth, storage); types; scripts; worker; tests; supabase/migrations; docs; gateway.
+gateway (lib, functions, scripts, public); app/(auth) pages; app/dashboard (student/faculty/admin UI); app/api route handlers; components/ui; lib (queries, auth, storage); types; scripts; worker; tests; supabase/migrations; docs.
 
 ## Tables
 users, courses, branches, student_profiles, subjects, contributions, resources, announcements.
@@ -13,12 +13,14 @@ Legacy assignments + submissions still exist until 002 runs (exporter first).
 storage_objects, storage_jobs, storage_shards added by storage-schema.sql.
 
 ## Routes
-/auth, /auth/login, /auth/signup, /auth/role, /onboarding, /waitlist.
+Gateway: POST /upload, GET /f/[token].
+App: /auth, /auth/login, /auth/signup, /auth/role, /onboarding, /waitlist.
 /dashboard, /dashboard/notes, /pyqs, /assignments, /lab-manuals, /contribute, /my-contributions, /announcements, /search, /upload, /profile, /admin.
 API: /api/auth/create-user, /api/admin/{approve,seed}, /api/announcements/{create,delete}, /api/contributions/create + [id]/file, /api/resources/create + [id]/file, /api/files/{token,[objectId]}, /api/search, /api/storage/{drain,health,warm}, /api/upload-url.
 
 ## Env
-NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SITE_URL; ADMIN_SEED_SECRET, ADMIN_SEED_PASSWORD; TELEGRAM_API_ID/HASH/SESSION/STORAGE_CHAT_ID; STORAGE_* (staging, limits, providers, ops/signing secrets); https://nexus-files-7b4c.pages.dev.
+Cloudflare Pages (nexus-files-7b4c.pages.dev): BOT_TOKEN, STORAGE_CHANNEL_ID, LINK_SIGNING_SECRET, ALLOWED_ORIGINS; unused: SUPABASE_URL, SUPABASE_ANON_KEY.
+App: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SITE_URL; ADMIN_SEED_SECRET, ADMIN_SEED_PASSWORD; TELEGRAM_API_ID/HASH/SESSION/STORAGE_CHAT_ID; STORAGE_* (staging, limits, providers, ops/signing secrets).
 
 ## Features
 Email/Google auth; roles student/faculty/admin; faculty approval; resource browsing by course/branch/semester; student contributions with admin approval queue; announcements; admin panel (faculty, courses, queue, resources, users); authenticated search (Bearer required).
