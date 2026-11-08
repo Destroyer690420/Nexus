@@ -123,3 +123,4 @@ if (violations.length > 0) {
   console.log("[PASS] Zero banned blue/indigo/sky/cyan/violet/purple/teal colors found.");
   process.exit(0);
 }
+

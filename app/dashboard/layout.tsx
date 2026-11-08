@@ -217,7 +217,7 @@ export default function DashboardLayout({
       <div className="min-h-screen bg-bg flex flex-col items-center justify-center p-6 text-center">
         <div className="flex flex-col items-center gap-3 animate-pulse">
           <Stickie mood="think" size={90} />
-          <p className="font-display font-extrabold text-sm text-ink-3">
+          <p className="font-display font-extrabold text-sm text-ink-2">
             Loading your campus...
           </p>
         </div>
@@ -281,7 +281,7 @@ export default function DashboardLayout({
               >
                 <div
                   className={`shrink-0 ${
-                    isActive ? "text-berry" : "text-ink-3"
+                    isActive ? "text-berry-deep" : "text-ink-3"
                   }`}
                 >
                   {item.icon(isActive)}

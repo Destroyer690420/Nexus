@@ -76,3 +76,4 @@ export function Sidebar({ items, userRole, className = "" }: SidebarProps) {
     </aside>
   );
 }
+

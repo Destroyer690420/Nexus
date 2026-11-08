@@ -129,7 +129,7 @@ export default function DashboardPage() {
       <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center">
         <div className="flex flex-col items-center gap-3 animate-pulse">
           <Stickie mood="think" size={80} />
-          <p className="font-display font-extrabold text-sm text-ink-3">
+          <p className="font-display font-extrabold text-sm text-ink-2">
             Loading your campus...
           </p>
         </div>

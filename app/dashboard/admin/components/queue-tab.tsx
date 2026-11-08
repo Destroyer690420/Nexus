@@ -62,6 +62,7 @@ function ContributionFilePreview({ item }: { item: Contribution }) {
         <iframe src={url} className="w-full h-[360px]" title="File preview" />
       ) : isImage ? (
         <div className="flex items-center justify-center p-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={url}
             alt={item.title}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Button,
   Card,
@@ -191,17 +191,17 @@ export function CoursesTab() {
     setSubjectList([]);
   };
 
-  const loadSubjects = async () => {
+  const loadSubjects = useCallback(async () => {
     if (!showSubjects || !subSemester) return;
     const course = courses.find((c) => c.id === showSubjects);
     const branch = course?.hasBranches ? subBranch : null;
     const list = await getSubjects(showSubjects, branch, Number(subSemester));
     setSubjectList(list);
-  };
+  }, [showSubjects, subSemester, subBranch, courses]);
 
   useEffect(() => {
     loadSubjects();
-  }, [showSubjects, subSemester, subBranch]);
+  }, [loadSubjects]);
 
   const handleAddSubject = async () => {
     if (!newSubName || !newSubCode || !showSubjects || !subSemester) return;

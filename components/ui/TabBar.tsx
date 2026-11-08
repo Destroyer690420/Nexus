@@ -36,7 +36,7 @@ export function TabBar({ items, className = "" }: TabBarProps) {
               key={item.href}
               href={item.href}
               className={`flex-1 flex flex-col items-center justify-center py-1 transition-transform duration-[90ms] active:scale-95 ${
-                isActive ? "text-berry" : "text-ink-2 hover:text-ink"
+                isActive ? "text-berry-deep" : "text-ink-2 hover:text-ink"
               }`}
             >
               <div className="relative text-2xl">
@@ -49,7 +49,7 @@ export function TabBar({ items, className = "" }: TabBarProps) {
               </div>
               <span
                 className={`text-[11px] font-display font-extrabold mt-0.5 tracking-tight ${
-                  isActive ? "text-berry font-black" : "text-ink-2"
+                  isActive ? "text-berry-deep font-black" : "text-ink-2"
                 }`}
               >
                 {item.label}

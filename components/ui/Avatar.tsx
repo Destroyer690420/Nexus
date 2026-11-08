@@ -52,6 +52,8 @@ export function Avatar({
       className={`relative inline-block flex-shrink-0 select-none ${className}`}
     >
       <div
+        role="img"
+        aria-label={`${name}'s avatar`}
         className={`relative overflow-hidden rounded-[28%] border-2 border-line bg-berry-tint text-berry-deep font-display font-black flex items-center justify-center shadow-[0_2px_0_var(--line-strong)] ${sizeClasses}`}
       >
         {showImage ? (

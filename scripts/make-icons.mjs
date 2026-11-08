@@ -157,3 +157,4 @@ generate().catch((err) => {
   console.error("Error generating brand assets:", err);
   process.exit(1);
 });
+

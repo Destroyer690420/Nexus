@@ -62,7 +62,7 @@ export function LargeTitleHeader({
             <button
               type="button"
               onClick={handleBackClick}
-              className="inline-flex items-center gap-0.5 text-berry font-display font-extrabold text-[15px] cursor-pointer hover:opacity-80 flex-shrink-0"
+              className="inline-flex items-center gap-0.5 text-berry-deep font-display font-extrabold text-[15px] cursor-pointer hover:opacity-80 flex-shrink-0"
             >
               <CaretLeft size={20} weight="bold" />
               <span className="truncate max-w-[120px]">{backLabel}</span>
@@ -82,7 +82,7 @@ export function LargeTitleHeader({
             <button
               type="button"
               onClick={handleBackClick}
-              className="inline-flex items-center gap-1 text-berry font-display font-extrabold text-[15px] cursor-pointer hover:opacity-80 active:translate-x-[-2px] transition-transform"
+              className="inline-flex items-center gap-1 text-berry-deep font-display font-extrabold text-[15px] cursor-pointer hover:opacity-80 active:translate-x-[-2px] transition-transform"
             >
               <CaretLeft size={20} weight="bold" />
               <span>{backLabel}</span>

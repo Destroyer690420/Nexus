@@ -308,15 +308,15 @@ export default function ProfilePage() {
     userData.role === "admin"
       ? "Administrator"
       : userData.role === "faculty"
-      ? "Faculty Member"
-      : "Student";
+        ? "Faculty Member"
+        : "Student";
 
   const roleBadgeVariant: "neutral" | "tangerine" | "berry" =
     userData.role === "admin"
       ? "berry"
       : userData.role === "faculty"
-      ? "tangerine"
-      : "neutral";
+        ? "tangerine"
+        : "neutral";
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">

@@ -21,11 +21,11 @@ type Tab = "overview" | "faculty" | "courses" | "queue" | "resources" | "users";
 
 const tabs = [
   { id: "overview", label: "Overview" },
-  { id: "faculty", label: "Faculty Approvals" },
-  { id: "courses", label: "Curriculum Catalog" },
-  { id: "queue", label: "Contribution Queue" },
-  { id: "resources", label: "Manage Resources" },
-  { id: "users", label: "Campus Users" },
+  { id: "faculty", label: "Faculty" },
+  { id: "courses", label: "Courses" },
+  { id: "queue", label: "Queue" },
+  { id: "resources", label: "Resources" },
+  { id: "users", label: "Users" },
 ];
 
 export default function AdminPage() {

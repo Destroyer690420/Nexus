@@ -30,3 +30,4 @@ export async function getAuthRedirectTarget(userId: string): Promise<string> {
 
   return "/dashboard";
 }
+
