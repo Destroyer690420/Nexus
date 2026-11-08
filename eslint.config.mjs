@@ -12,6 +12,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "gateway/**",
   ]),
   {
     // Pre-existing patterns predate the React Compiler lint rules; these are
