@@ -16,16 +16,19 @@ vi.mock("@/lib/supabase-admin", () => {
 
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+const mockGetUser = vi.mocked(supabaseAdmin.auth.getUser);
+const mockFrom = vi.mocked(supabaseAdmin.from);
+
 const TEST_SECRET = "test-signing-secret-key-1234567890abcdef";
 process.env.LINK_SIGNING_SECRET = TEST_SECRET;
 
 describe("POST /api/files/register", () => {
   it("inserts new file row on first registration", async () => {
     const user = { id: "user-123", email: "user@example.com" };
-    (supabaseAdmin.auth.getUser as any).mockResolvedValue({
-      data: { user },
+    mockGetUser.mockResolvedValue({
+      data: { user: user as unknown },
       error: null,
-    });
+    } as unknown as Awaited<ReturnType<typeof supabaseAdmin.auth.getUser>>);
 
     const now = Math.floor(Date.now() / 1000);
     const receiptPayload: RcPayload = {
@@ -50,11 +53,11 @@ describe("POST /api/files/register", () => {
       }),
     });
 
-    (supabaseAdmin.from as any).mockImplementation((table: string) => {
+    mockFrom.mockImplementation((table: string) => {
       if (table === "files") {
-        return { insert: insertMock };
+        return { insert: insertMock } as unknown as ReturnType<typeof supabaseAdmin.from>;
       }
-      return {};
+      return {} as unknown as ReturnType<typeof supabaseAdmin.from>;
     });
 
     const req = new NextRequest("http://localhost:3000/api/files/register", {
@@ -81,10 +84,10 @@ describe("POST /api/files/register", () => {
 
   it("handles unique violation (sha256, size_bytes) by returning existing id without modifying metadata", async () => {
     const user = { id: "user-123", email: "user@example.com" };
-    (supabaseAdmin.auth.getUser as any).mockResolvedValue({
-      data: { user },
+    mockGetUser.mockResolvedValue({
+      data: { user: user as unknown },
       error: null,
-    });
+    } as unknown as Awaited<ReturnType<typeof supabaseAdmin.auth.getUser>>);
 
     const now = Math.floor(Date.now() / 1000);
     const duplicateReceiptPayload: RcPayload = {
@@ -124,14 +127,14 @@ describe("POST /api/files/register", () => {
       eq: eqShaMock,
     });
 
-    (supabaseAdmin.from as any).mockImplementation((table: string) => {
+    mockFrom.mockImplementation((table: string) => {
       if (table === "files") {
         return {
           insert: insertMock,
           select: selectMock,
-        };
+        } as unknown as ReturnType<typeof supabaseAdmin.from>;
       }
-      return {};
+      return {} as unknown as ReturnType<typeof supabaseAdmin.from>;
     });
 
     const req = new NextRequest("http://localhost:3000/api/files/register", {

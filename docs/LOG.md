@@ -23,3 +23,4 @@ N-022 | 2026-11-08 | [FEAT] | supabase/migrations/006, app/api/files/ticket/, te
 N-023 | 2026-11-08 | [FEAT] | scripts/backup-index.mjs, scripts/restore-index.mjs, docs/ | Excluded users and student_profiles from backup/restore on purpose for privacy | undo: git revert HEAD
 N-024 | 2026-11-08 | [REFACTOR] | rls-policies.sql, supabase-schema.sql | Removed obsolete root rls-policies.sql and marked supabase-schema.sql as baseline-only | undo: git revert HEAD
 N-025 | 2026-11-08 | [FEAT] | .github/workflows/keepalive.yml | Updated keepalive to query courses table with anon key and fail on non-2xx | undo: git revert HEAD
+N-026 | 2026-11-08 | [FEAT] | scripts/e2e-storage.mjs, tests/, docs/STATE.md | Added e2e verification checks for dedupe, ticket rate limiting, privacy and updated test typings | undo: git revert HEAD

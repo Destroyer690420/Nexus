@@ -16,6 +16,9 @@ vi.mock("@/lib/supabase-admin", () => {
 
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+const mockGetUser = vi.mocked(supabaseAdmin.auth.getUser);
+const mockFrom = vi.mocked(supabaseAdmin.from);
+
 const TEST_SECRET = "test-signing-secret-key-1234567890abcdef";
 process.env.LINK_SIGNING_SECRET = TEST_SECRET;
 
@@ -26,17 +29,17 @@ describe("POST /api/files/ticket", () => {
 
   it("mints upload ticket with 120s expiry and inserts into upload_tickets", async () => {
     const user = { id: "user-abc", email: "user@example.com" };
-    (supabaseAdmin.auth.getUser as any).mockResolvedValue({
-      data: { user },
+    mockGetUser.mockResolvedValue({
+      data: { user: user as unknown },
       error: null,
-    });
+    } as unknown as Awaited<ReturnType<typeof supabaseAdmin.auth.getUser>>);
 
     const insertMock = vi.fn().mockResolvedValue({ error: null });
     const deleteMock = vi.fn().mockReturnValue({
       lt: vi.fn().mockReturnValue(Promise.resolve()),
     });
 
-    (supabaseAdmin.from as any).mockImplementation((table: string) => {
+    mockFrom.mockImplementation((table: string) => {
       if (table === "files") {
         return {
           select: vi.fn().mockReturnValue({
@@ -46,7 +49,7 @@ describe("POST /api/files/ticket", () => {
               }),
             }),
           }),
-        };
+        } as unknown as ReturnType<typeof supabaseAdmin.from>;
       }
       if (table === "users") {
         return {
@@ -55,7 +58,7 @@ describe("POST /api/files/ticket", () => {
               maybeSingle: vi.fn().mockResolvedValue({ data: { role: "student" } }),
             }),
           }),
-        };
+        } as unknown as ReturnType<typeof supabaseAdmin.from>;
       }
       if (table === "upload_tickets") {
         return {
@@ -66,9 +69,9 @@ describe("POST /api/files/ticket", () => {
           }),
           insert: insertMock,
           delete: deleteMock,
-        };
+        } as unknown as ReturnType<typeof supabaseAdmin.from>;
       }
-      return {};
+      return {} as unknown as ReturnType<typeof supabaseAdmin.from>;
     });
 
     const req = new NextRequest("http://localhost:3000/api/files/ticket", {
@@ -103,12 +106,12 @@ describe("POST /api/files/ticket", () => {
   it("returns 429 when UPLOAD_DAILY_LIMIT is exceeded for non-admin", async () => {
     process.env.UPLOAD_DAILY_LIMIT = "2";
     const user = { id: "user-rate-limited", email: "user@example.com" };
-    (supabaseAdmin.auth.getUser as any).mockResolvedValue({
-      data: { user },
+    mockGetUser.mockResolvedValue({
+      data: { user: user as unknown },
       error: null,
-    });
+    } as unknown as Awaited<ReturnType<typeof supabaseAdmin.auth.getUser>>);
 
-    (supabaseAdmin.from as any).mockImplementation((table: string) => {
+    mockFrom.mockImplementation((table: string) => {
       if (table === "files") {
         return {
           select: vi.fn().mockReturnValue({
@@ -118,7 +121,7 @@ describe("POST /api/files/ticket", () => {
               }),
             }),
           }),
-        };
+        } as unknown as ReturnType<typeof supabaseAdmin.from>;
       }
       if (table === "users") {
         return {
@@ -127,7 +130,7 @@ describe("POST /api/files/ticket", () => {
               maybeSingle: vi.fn().mockResolvedValue({ data: { role: "student" } }),
             }),
           }),
-        };
+        } as unknown as ReturnType<typeof supabaseAdmin.from>;
       }
       if (table === "upload_tickets") {
         return {
@@ -136,9 +139,9 @@ describe("POST /api/files/ticket", () => {
               gte: vi.fn().mockResolvedValue({ count: 2, error: null }),
             }),
           }),
-        };
+        } as unknown as ReturnType<typeof supabaseAdmin.from>;
       }
-      return {};
+      return {} as unknown as ReturnType<typeof supabaseAdmin.from>;
     });
 
     const req = new NextRequest("http://localhost:3000/api/files/ticket", {
