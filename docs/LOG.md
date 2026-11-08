@@ -30,3 +30,5 @@ N-029 | 2026-11-08 | [FEAT] | components/ui/, app/globals.css, app/layout.tsx, a
 N-030 | 2026-11-08 | [FEAT] | app/not-found.tsx, app/error.tsx, app/loading.tsx, app/(auth)/, app/dashboard/layout.tsx | Phase 3: Rebuilt tactile auth flows, onboarding stepper, waitlist, and responsive dashboard shell | undo: git revert HEAD
 N-031 | 2026-11-08 | [FEAT] | app/dashboard/{page,notes,pyqs,assignments,lab-manuals}/ | Phase 4: Rebuilt tactile dashboard home, category cards, subject lists, unit/year drilldowns, and file screens | undo: git revert HEAD
 N-032 | 2026-11-08 | [FEAT] | app/dashboard/{search,announcements,contribute,my-contributions,upload}/ | Phase 5: Rebuilt search with grouped lists, announcements with confirm sheets, and contribute/upload with dropzones | undo: git revert HEAD
+
+N-033 | 2026-11-08 | [FEAT] | app/dashboard/{profile,admin}/, types/ | Phase 6: Rebuilt user profile with avatar resize, theme toggle, and 6-tab admin panel | undo: git revert HEAD

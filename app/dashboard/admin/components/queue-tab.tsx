@@ -1,7 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button, Card, Badge } from "@/components/ui";
+import {
+  Check,
+  X,
+  Eye,
+  File as FileGeneric,
+  ArrowSquareOut,
+} from "@phosphor-icons/react";
+import {
+  Button,
+  Chip,
+  Sheet,
+  TextField,
+  Stickie,
+} from "@/components/ui";
 import {
   getPendingContributions,
   approveContribution,
@@ -17,25 +30,25 @@ function ContributionFilePreview({ item }: { item: Contribution }) {
 
   if (!fileRef) {
     return (
-      <div className="rounded-[var(--radius-md)] border border-border p-5 mb-5 text-center">
-        <p className="text-sm text-text-tertiary">No file attached</p>
+      <div className="rounded-[16px] border-2 border-line p-5 mb-4 text-center bg-surface-sunken">
+        <p className="text-xs font-semibold text-ink-3">No file attached</p>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="rounded-[var(--radius-md)] border border-border p-8 mb-5 text-center flex items-center justify-center">
-        <div className="animate-spin h-5 w-5 border-2 border-text-tertiary border-t-accent rounded-full mr-2" />
-        <span className="text-sm text-text-secondary">Loading file preview...</span>
+      <div className="rounded-[16px] border-2 border-line p-8 mb-4 text-center flex items-center justify-center gap-2 bg-surface-sunken">
+        <div className="w-5 h-5 rounded-full border-2 border-line border-t-berry animate-spin" />
+        <span className="text-xs font-semibold text-ink-2">Loading preview...</span>
       </div>
     );
   }
 
   if (error || !url) {
     return (
-      <div className="rounded-[var(--radius-md)] border border-destructive/20 bg-destructive/5 p-4 mb-5 text-center">
-        <p className="text-sm text-destructive">{error || "Failed to load file preview"}</p>
+      <div className="rounded-[16px] border-2 border-crimson/20 bg-crimson-tint p-4 mb-4 text-center">
+        <p className="text-xs font-semibold text-crimson-deep">{error || "Failed to load file preview"}</p>
       </div>
     );
   }
@@ -44,138 +57,34 @@ function ContributionFilePreview({ item }: { item: Contribution }) {
   const isImage = url.match(/\.(png|jpg|jpeg|gif|webp|svg)/i) || item.title.match(/\.(png|jpg|jpeg|gif|webp)$/i);
 
   return (
-    <div className="rounded-[var(--radius-md)] border border-border overflow-hidden mb-5 bg-surface-hover">
+    <div className="rounded-[18px] border-2 border-line overflow-hidden mb-4 bg-surface-sunken">
       {isPdf ? (
-        <iframe src={url} className="w-full h-[400px]" title="File preview" />
+        <iframe src={url} className="w-full h-[360px]" title="File preview" />
       ) : isImage ? (
         <div className="flex items-center justify-center p-4">
           <img
             src={url}
             alt={item.title}
-            className="max-w-full max-h-[400px] object-contain rounded-[var(--radius-md)]"
+            className="max-w-full max-h-[360px] object-contain rounded-[12px]"
           />
         </div>
       ) : (
-        <div className="flex items-center gap-3 p-5">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-tertiary">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
-            <path d="M14 2v6h6"/>
-          </svg>
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-2.5">
+            <FileGeneric size={24} weight="bold" className="text-ink-2" />
+            <span className="text-xs font-bold text-ink">Download to preview file</span>
+          </div>
           <a
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-accent hover:underline underline-offset-2"
+            className="inline-flex items-center gap-1 text-xs font-bold text-berry hover:underline"
           >
-            Open file in new tab
+            <span>Open externally</span>
+            <ArrowSquareOut size={16} weight="bold" />
           </a>
         </div>
       )}
-    </div>
-  );
-}
-
-function PreviewModal({
-  item,
-  onClose,
-  onApprove,
-  onReject,
-  actionUid,
-}: {
-  item: Contribution;
-  onClose: () => void;
-  onApprove: (id: string) => void;
-  onReject: (id: string) => void;
-  actionUid: string | null;
-}) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="absolute inset-0 bg-overlay animate-fade-in" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-2xl animate-scale-in">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-text-primary">
-            Preview Contribution
-          </h2>
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center h-8 w-8 rounded-full text-text-tertiary hover:text-text-primary hover:bg-surface-hover transition-all duration-200 cursor-pointer"
-          >
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-
-        {/* File Preview */}
-        <ContributionFilePreview item={item} />
-
-        {/* Metadata */}
-        <div className="space-y-3 mb-6">
-          <div className="flex items-center gap-2">
-            <Badge variant="accent">{item.type}</Badge>
-            {item.tags?.map((t) => (
-              <Badge key={t} variant="default">{t}</Badge>
-            ))}
-          </div>
-          <p className="text-lg font-semibold text-text-primary">{item.title}</p>
-          {item.description && (
-            <p className="text-sm text-text-secondary">{item.description}</p>
-          )}
-          <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <div>
-              <span className="text-text-tertiary">Course: </span>
-              <span className="text-text-primary">{item.courseId}</span>
-            </div>
-            {item.branchId && (
-              <div>
-                <span className="text-text-tertiary">Branch: </span>
-                <span className="text-text-primary">{item.branchId}</span>
-              </div>
-            )}
-            <div>
-              <span className="text-text-tertiary">Semester: </span>
-              <span className="text-text-primary">{item.semesterId}</span>
-            </div>
-            {item.subjectId && (
-              <div>
-                <span className="text-text-tertiary">Subject: </span>
-                <span className="text-text-primary">{item.subjectId}</span>
-              </div>
-            )}
-            {item.unit && (
-              <div>
-                <span className="text-text-tertiary">Unit: </span>
-                <span className="text-text-primary">{item.unit}</span>
-              </div>
-            )}
-          </div>
-          <p className="text-xs text-text-tertiary">
-            Contributed {new Date(item.createdAt).toLocaleDateString()}
-            {item.contributorName && ` by ${item.contributorName}`}
-          </p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex justify-end gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => onReject(item.id)}
-            loading={actionUid === item.id}
-          >
-            Reject
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => onApprove(item.id)}
-            loading={actionUid === item.id}
-          >
-            Approve
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -186,10 +95,23 @@ export function QueueTab() {
   const [actionUid, setActionUid] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<Contribution | null>(null);
 
+  // Reject sheet
+  const [rejectItem, setRejectItem] = useState<Contribution | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejecting, setRejecting] = useState(false);
+
   useEffect(() => {
+    let active = true;
     getPendingContributions()
-      .then(setItems)
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (active) setItems(data);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleApprove = async (id: string) => {
@@ -206,102 +128,228 @@ export function QueueTab() {
     setActionUid(null);
   };
 
-  const handleReject = async (id: string) => {
-    setActionUid(id);
+  const handleConfirmReject = async () => {
+    if (!rejectItem) return;
+    setRejecting(true);
     try {
-      await rejectContribution(id);
-      setItems((prev) => prev.filter((i) => i.id !== id));
+      await rejectContribution(rejectItem.id, rejectReason.trim() || undefined);
+      setItems((prev) => prev.filter((i) => i.id !== rejectItem.id));
+      setRejectItem(null);
+      setRejectReason("");
       setPreviewItem(null);
     } catch {
       alert("Failed to reject contribution.");
     }
-    setActionUid(null);
+    setRejecting(false);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      <div className="py-12 flex flex-col items-center justify-center gap-3">
+        <Stickie mood="think" size={80} />
+        <p className="font-display font-extrabold text-sm text-ink-3">
+          Loading contribution queue...
+        </p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-text-secondary">
-          {items.length} pending contribution{items.length !== 1 ? "s" : ""}.
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-bold text-ink-3 uppercase tracking-wider">
+          {items.length} pending contribution{items.length !== 1 ? "s" : ""}
         </p>
       </div>
 
       {items.length === 0 ? (
-        <Card>
-          <p className="text-sm text-text-secondary">
-            No pending contributions. When students upload resources, they will
-            appear here for approval.
-          </p>
-        </Card>
+        <div className="p-8 rounded-[24px] border-2 border-line bg-surface text-center flex flex-col items-center gap-4">
+          <Stickie mood="cheer" size={110} />
+          <div className="space-y-1">
+            <h3 className="font-display font-black text-lg text-ink">
+              Queue is clear!
+            </h3>
+            <p className="text-xs font-semibold text-ink-3 max-w-xs mx-auto">
+              All student contributions have been reviewed and processed.
+            </p>
+          </div>
+        </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="space-y-3">
           {items.map((item) => (
-            <Card key={item.id} className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="rounded bg-accent-light px-2 py-0.5 text-xs font-medium text-accent uppercase">
-                      {item.type}
-                    </span>
-                    <p className="text-sm font-medium text-text-primary truncate">
-                      {item.title}
-                    </p>
-                  </div>
-                  <p className="text-xs text-text-tertiary mt-1.5">
-                    Contributed{" "}
-                    {new Date(item.createdAt).toLocaleDateString()}
-                    {item.contributorName && ` by ${item.contributorName}`}
-                  </p>
-                  {item.description && (
-                    <p className="text-xs text-text-secondary mt-1 line-clamp-2">
-                      {item.description}
-                    </p>
+            <div
+              key={item.id}
+              className="p-5 rounded-[22px] border-2 border-line bg-surface shadow-[0_3px_0_var(--line-strong)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <Chip variant="neutral" className="uppercase text-[10px] font-black">
+                    {item.type}
+                  </Chip>
+                  {item.unit && (
+                    <Chip variant="berry" className="text-[10px] font-bold">
+                      Unit {item.unit}
+                    </Chip>
                   )}
+                  {item.year && (
+                    <Chip variant="sun" className="text-[10px] font-bold">
+                      Year {item.year}
+                    </Chip>
+                  )}
+                  <span className="text-xs font-semibold text-ink-3">
+                    Submitted {new Date(item.createdAt).toLocaleDateString()}
+                    {item.contributorName && ` by ${item.contributorName}`}
+                  </span>
                 </div>
-                <div className="flex gap-2 ml-4 flex-shrink-0">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setPreviewItem(item)}
-                  >
-                    Preview
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={() => handleApprove(item.id)}
-                    loading={actionUid === item.id}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleReject(item.id)}
-                    loading={actionUid === item.id}
-                  >
-                    Reject
-                  </Button>
-                </div>
+
+                <h4 className="font-display font-black text-base text-ink truncate">
+                  {item.title}
+                </h4>
+
+                {item.description && (
+                  <p className="mt-1 text-xs text-ink-2 line-clamp-1">
+                    {item.description}
+                  </p>
+                )}
               </div>
-            </Card>
+
+              <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setPreviewItem(item)}
+                >
+                  <Eye size={16} weight="bold" />
+                  Preview
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleApprove(item.id)}
+                  loading={actionUid === item.id}
+                >
+                  <Check size={16} weight="bold" />
+                  Approve
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setRejectItem(item)}
+                  loading={actionUid === item.id}
+                >
+                  <X size={16} weight="bold" />
+                  Reject
+                </Button>
+              </div>
+            </div>
           ))}
         </div>
       )}
 
+      {/* Preview Sheet */}
       {previewItem && (
-        <PreviewModal
-          item={previewItem}
+        <Sheet
+          open={Boolean(previewItem)}
           onClose={() => setPreviewItem(null)}
-          onApprove={handleApprove}
-          onReject={handleReject}
-          actionUid={actionUid}
-        />
+          title="Review Contribution"
+        >
+          <div className="space-y-4 py-2">
+            <ContributionFilePreview item={previewItem} />
+
+            <div className="space-y-1">
+              <h3 className="font-display font-black text-lg text-ink">
+                {previewItem.title}
+              </h3>
+              {previewItem.description && (
+                <p className="text-xs text-ink-2 leading-relaxed">
+                  {previewItem.description}
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs p-3 rounded-[14px] bg-surface-sunken border border-line">
+              <div>
+                <span className="text-ink-3 block">Type:</span>
+                <span className="font-bold text-ink uppercase">{previewItem.type}</span>
+              </div>
+              <div>
+                <span className="text-ink-3 block">Curriculum:</span>
+                <span className="font-bold text-ink">Sem {previewItem.semesterId}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <Button
+                variant="destructive"
+                size="md"
+                fullWidth
+                onClick={() => {
+                  setRejectItem(previewItem);
+                  setPreviewItem(null);
+                }}
+              >
+                Reject with note
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                fullWidth
+                onClick={() => handleApprove(previewItem.id)}
+                loading={actionUid === previewItem.id}
+              >
+                Approve to library
+              </Button>
+            </div>
+          </div>
+        </Sheet>
+      )}
+
+      {/* Reject Reason Sheet */}
+      {rejectItem && (
+        <Sheet
+          open={Boolean(rejectItem)}
+          onClose={() => {
+            setRejectItem(null);
+            setRejectReason("");
+          }}
+          title="Reject Contribution"
+        >
+          <div className="space-y-4 py-2">
+            <p className="text-xs font-semibold text-ink-2">
+              Explain why this contribution was rejected. The student will see this note in their contribution history.
+            </p>
+
+            <TextField
+              label="Rejection Note (Optional)"
+              placeholder="e.g. Scans are blurry; please re-upload clear photos."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+            />
+
+            <div className="flex items-center gap-2 pt-2">
+              <Button
+                variant="ghost"
+                size="md"
+                fullWidth
+                onClick={() => {
+                  setRejectItem(null);
+                  setRejectReason("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="md"
+                fullWidth
+                onClick={handleConfirmReject}
+                loading={rejecting}
+              >
+                Confirm rejection
+              </Button>
+            </div>
+          </div>
+        </Sheet>
       )}
     </div>
   );

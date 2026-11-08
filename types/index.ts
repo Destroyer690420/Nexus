@@ -22,6 +22,7 @@ export interface Contribution {
   semesterId: number;
   subjectId?: string;
   unit?: number;
+  year?: number;
   fileUrl?: string;
   fileId?: string | null;
   tags?: string[];

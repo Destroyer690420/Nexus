@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { PageHeader } from "@/components/ui";
+import {
+  LargeTitleHeader,
+  ScrollTabs,
+  Stickie,
+} from "@/components/ui";
 import { onAuthChange, getUserData } from "@/lib/supabase-auth";
 import {
   OverviewTab,
@@ -15,13 +19,13 @@ import {
 
 type Tab = "overview" | "faculty" | "courses" | "queue" | "resources" | "users";
 
-const tabs: { id: Tab; label: string }[] = [
+const tabs = [
   { id: "overview", label: "Overview" },
-  { id: "faculty", label: "Faculty" },
-  { id: "courses", label: "Courses" },
-  { id: "queue", label: "Content Queue" },
-  { id: "resources", label: "Resources" },
-  { id: "users", label: "Users" },
+  { id: "faculty", label: "Faculty Approvals" },
+  { id: "courses", label: "Curriculum Catalog" },
+  { id: "queue", label: "Contribution Queue" },
+  { id: "resources", label: "Manage Resources" },
+  { id: "users", label: "Campus Users" },
 ];
 
 export default function AdminPage() {
@@ -31,54 +35,60 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     const unsub = onAuthChange(async (user) => {
-      if (!user) { router.replace("/auth"); return; }
+      if (!user) {
+        router.replace("/auth");
+        return;
+      }
       const data = await getUserData(user.id);
-      if (!data || data.role !== "admin") { router.replace("/dashboard"); return; }
-      setIsAdmin(true);
-      setLoading(false);
+      if (!data || data.role !== "admin") {
+        router.replace("/dashboard");
+        return;
+      }
+      if (active) {
+        setIsAdmin(true);
+        setLoading(false);
+      }
     });
-    return unsub;
+    return () => {
+      active = false;
+      unsub();
+    };
   }, [router]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center">
+        <div className="flex flex-col items-center gap-3 animate-pulse">
+          <Stickie mood="think" size={80} />
+          <p className="font-display font-extrabold text-sm text-ink-3">
+            Verifying administrative access...
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!isAdmin) {
-    return <p className="text-sm text-text-secondary">Redirecting...</p>;
+    return null;
   }
 
   return (
-    <div className="max-w-5xl">
-      <PageHeader
+    <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+      <LargeTitleHeader
         title="Admin Panel"
-        subtitle="Manage courses, users, content, and more."
-        icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>}
+        subtitle="Campus governance, user roles, curriculum catalog, and content verification"
+        parentHref="/dashboard"
       />
 
-      {/* Pill-style tab bar */}
-      <div className="flex gap-1 mb-6 overflow-x-auto rounded-[var(--radius-lg)] bg-surface-hover p-1 scrollbar-none">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 text-xs font-medium rounded-[var(--radius-md)] transition-all duration-200 cursor-pointer whitespace-nowrap ${
-              activeTab === tab.id
-                ? "bg-surface text-text-primary shadow-sm"
-                : "text-text-secondary hover:text-text-primary"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <ScrollTabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onChange={(tabId) => setActiveTab(tabId as Tab)}
+      />
 
-      <div className="animate-fade-in">
+      <div className="pt-2">
         {activeTab === "overview" && <OverviewTab />}
         {activeTab === "faculty" && <FacultyTab />}
         {activeTab === "courses" && <CoursesTab />}
