@@ -30,6 +30,6 @@ E2E verified: 10/10 checks passed on deployed Cloudflare Pages gateway (upload, 
 Assignments is a resource type for faculty/admin material only. Students cannot contribute it. Submission, due-date and grading flows removed.
 
 ## Open
-Migrations pending human run: 001_security.sql, 002_drop_assignments.sql, 003_guard_sql_editor.sql, 004_drop_legacy_storage.sql, 005_files.sql.
-Verify RLS coverage with the pg_tables query in 001.
+Migrations 001 through 005 applied in production Supabase database.
+Legacy study materials migrated to Telegram file gateway (12 files registered; 0 orphans).
 Server route protection via middleware deferred: localStorage sessions are invisible to the server (see DECISIONS D01).
