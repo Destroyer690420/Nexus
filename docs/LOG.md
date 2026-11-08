@@ -6,3 +6,4 @@ N-005 | 2026-11-08 | [FEAT] | gateway/, tsconfig.json, eslint.config.mjs | Creat
 N-006 | 2026-11-08 | [FIX] | supabase/migrations/002_drop_assignments.sql | Removed redundant drop policy statements that threw 42P01 when tables do not exist | undo: git revert HEAD
 N-007 | 2026-11-08 | [DOC] | docs/LOG.md | Verified direct Telegram Bot API storage channel send, getFile, download SHA-256, 20MB limit and deleteMessage
 N-008 | 2026-11-08 | [FEAT] | gateway/ | Implemented stateless Telegram file gateway with HMAC tokens, streaming upload, synthetic cache, and selftests | undo: git revert HEAD
+N-009 | 2026-11-08 | [FEAT] | gateway/functions/upload.js, gateway/scripts/selftest.mjs | Deployed gateway to Cloudflare Pages and verified all 8 end-to-end integration checks | undo: git revert HEAD

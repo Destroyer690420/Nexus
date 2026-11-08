@@ -10,17 +10,11 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   const corsHeaders = getCorsHeaders(request, env);
 
-  // 1. Content-Length required
+  // 1. Content-Length required (missing, invalid, or 0 -> 411)
   const clHeader = request.headers.get("content-length");
-  if (!clHeader) {
+  const contentLength = clHeader ? parseInt(clHeader, 10) : NaN;
+  if (!clHeader || isNaN(contentLength) || contentLength <= 0) {
     return new Response("Length Required", { status: 411, headers: corsHeaders });
-  }
-  const contentLength = parseInt(clHeader, 10);
-  if (isNaN(contentLength)) {
-    return new Response("Length Required", { status: 411, headers: corsHeaders });
-  }
-  if (contentLength === 0) {
-    return new Response("Empty body", { status: 400, headers: corsHeaders });
   }
 
   // 2. Ticket verification (typ up)
@@ -191,3 +185,4 @@ export async function onRequestPost(context) {
     headers: resHeaders,
   });
 }
+

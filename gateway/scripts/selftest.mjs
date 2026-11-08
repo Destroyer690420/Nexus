@@ -190,6 +190,7 @@ async function run() {
     const upToken = await mintUpToken();
 
     // 21 MB body -> 413
+    const buf21 = Buffer.alloc(21000000, 0x25);
     const r21 = await fetch(`${BASE_URL}/upload`, {
       method: "POST",
       headers: {
@@ -198,7 +199,7 @@ async function run() {
         "X-File-Name": "big.pdf",
         "X-File-Sha256": t19Sha,
       },
-      body: Buffer.from("%PDF"),
+      body: buf21,
       duplex: "half",
     });
 
@@ -228,7 +229,7 @@ async function run() {
       duplex: "half",
     });
 
-    // No Content-Length -> 411 (using native https with chunked transfer)
+    // No Content-Length -> 411
     const rNoCl = await new Promise((resolve, reject) => {
       const url = new URL(`${BASE_URL}/upload`);
       const req = https.request({
@@ -243,7 +244,6 @@ async function run() {
         },
       }, res => resolve({ status: res.statusCode }));
       req.on("error", reject);
-      req.write("%PDF");
       req.end();
     });
 
@@ -360,3 +360,4 @@ run().catch(err => {
   console.error("FATAL ERROR IN SELFTEST:", err);
   process.exit(1);
 });
+

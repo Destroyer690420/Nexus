@@ -95,3 +95,4 @@ export function checkMagic(ext, chunk) {
 
   return false;
 }
+

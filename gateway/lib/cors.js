@@ -28,3 +28,4 @@ export function handleOptions(request, env) {
     headers: corsHeaders,
   });
 }
+

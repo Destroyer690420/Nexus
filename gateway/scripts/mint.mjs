@@ -71,3 +71,4 @@ if (process.argv[1]?.endsWith("mint.mjs")) {
     process.exit(1);
   }
 }
+
