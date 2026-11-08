@@ -51,25 +51,43 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Upsert into files table
+    // Insert into files table. Never upsert: on unique violation (sha256, size_bytes),
+    // return the existing row's id and never mutate existing metadata.
     const { data, error: insertError } = await supabaseAdmin
       .from("files")
-      .upsert(
-        {
-          tg_file_id: rc.fid,
-          tg_message_id: rc.mid,
-          sha256: rc.sha.toLowerCase(),
-          size_bytes: rc.size,
-          mime: rc.mime,
-          original_name: rc.name,
-          uploaded_by: user.id,
-        },
-        { onConflict: "sha256,size_bytes" }
-      )
+      .insert({
+        tg_file_id: rc.fid,
+        tg_message_id: rc.mid,
+        sha256: rc.sha.toLowerCase(),
+        size_bytes: rc.size,
+        mime: rc.mime,
+        original_name: rc.name,
+        uploaded_by: user.id,
+      })
       .select("id")
       .single();
 
-    if (insertError || !data?.id) {
+    if (insertError) {
+      if (
+        insertError.code === "23505" ||
+        insertError.message?.includes("unique") ||
+        insertError.details?.includes("already exists")
+      ) {
+        const { data: existing, error: selectError } = await supabaseAdmin
+          .from("files")
+          .select("id")
+          .eq("sha256", rc.sha.toLowerCase())
+          .eq("size_bytes", rc.size)
+          .single();
+
+        if (existing?.id) {
+          return NextResponse.json({ fileId: existing.id });
+        }
+        if (selectError) {
+          console.error("Failed to select existing file row on conflict:", selectError);
+        }
+      }
+
       console.error("Failed to register file row:", insertError);
       return NextResponse.json(
         { error: "Failed to register file in database" },
@@ -83,4 +101,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
