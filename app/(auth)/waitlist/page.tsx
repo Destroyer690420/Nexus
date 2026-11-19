@@ -2,64 +2,61 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import { Button, Stickie } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
-import { onAuthChange, logout } from "@/lib/supabase-auth";
+import { onAuthChange, logout, getUserData } from "@/lib/supabase-auth";
 
 export default function WaitlistPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    let active = true;
-    const unsub = onAuthChange(async (user) => {
+    const resolveUser = async (user: User | null) => {
       if (!user) {
-        if (active) router.replace("/auth");
+        router.replace("/auth");
         return;
       }
-      if (active) setEmail(user.email || "");
-    });
-    return () => {
-      active = false;
-      unsub();
+      setEmail(user.email || "");
+      setUserId(user.id);
+      const data = await getUserData(user.id);
+      if (data?.approved === true || data?.role !== "faculty") {
+        router.replace("/dashboard");
+      }
     };
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => resolveUser(data.session?.user ?? null));
+    return onAuthChange(resolveUser);
   }, [router]);
 
   useEffect(() => {
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    if (!userId) return;
 
-    const setupListener = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      if (!userId) return;
-
-      channel = supabase
-        .channel(`waitlist-${userId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "users",
-            filter: `uid=eq.${userId}`,
-          },
-          (payload) => {
-            if ((payload.new as { approved?: boolean })?.approved === true) {
-              router.replace("/dashboard");
-            }
+    const channel = supabase
+      .channel(`waitlist-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "users",
+          filter: `uid=eq.${userId}`,
+        },
+        (payload) => {
+          if ((payload.new as { approved?: boolean })?.approved === true) {
+            router.replace("/dashboard");
           }
-        )
-        .subscribe();
-    };
-
-    setupListener();
+        }
+      )
+      .subscribe();
 
     return () => {
-      if (channel) supabase.removeChannel(channel);
+      supabase.removeChannel(channel);
     };
-  }, [router]);
+  }, [router, userId]);
 
   const handleLogout = async () => {
     await logout();
