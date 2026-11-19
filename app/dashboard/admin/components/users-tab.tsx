@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button, Card, Input } from "@/components/ui";
+import { useState, useEffect, useMemo } from "react";
+import { Check } from "@phosphor-icons/react";
+import {
+  Button,
+  Chip,
+  SearchField,
+  Select,
+  Stickie,
+  Avatar,
+} from "@/components/ui";
 import { getAllUsers, updateUserRole } from "@/lib/queries";
 import { getSessionToken } from "@/lib/supabase-auth";
 import type { UserData, UserRole } from "@/types";
-
-const roleColors: Record<UserRole, string> = {
-  admin: "bg-accent-light text-accent",
-  faculty: "bg-warning/10 text-warning",
-  student: "bg-success/10 text-success",
-};
 
 export function UsersTab() {
   const [users, setUsers] = useState<UserData[]>([]);
@@ -66,87 +68,108 @@ export function UsersTab() {
     setApprovingUid(null);
   };
 
-  const filtered = users.filter(
-    (u) =>
-      !search || u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    if (!search.trim()) return users;
+    const q = search.toLowerCase();
+    return users.filter(
+      (u) =>
+        u.email.toLowerCase().includes(q) ||
+        (u.name && u.name.toLowerCase().includes(q))
+    );
+  }, [users, search]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      <div className="py-12 flex flex-col items-center justify-center gap-3">
+        <Stickie mood="think" size={80} />
+        <p className="font-display font-extrabold text-sm text-ink-3">
+          Loading campus users...
+        </p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="mb-4 max-w-xs">
-        <Input
-          placeholder="Search by email..."
+    <div className="space-y-4">
+      <div className="max-w-xs">
+        <SearchField
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
+          placeholder="Search by name or email..."
         />
       </div>
 
-      <p className="text-sm text-text-secondary mb-4">
-        {filtered.length} user{filtered.length !== 1 ? "s" : ""}.
-      </p>
+      <div className="space-y-3">
+        {filtered.map((u) => {
+          const roleVariant: "berry" | "tangerine" | "neutral" =
+            u.role === "admin"
+              ? "berry"
+              : u.role === "faculty"
+              ? "tangerine"
+              : "neutral";
 
-      <div className="flex flex-col gap-2">
-        {filtered.map((u) => (
-          <Card key={u.uid} className="p-3 flex items-center justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <div>
-                <p className="text-sm font-medium text-text-primary">
-                  {u.email}
-                </p>
-                <p className="text-xs text-text-tertiary">
-                  Joined {new Date(u.createdAt).toLocaleDateString()}
-                </p>
+          return (
+            <div
+              key={u.uid}
+              className="p-4 rounded-[20px] border-2 border-line bg-surface shadow-[0_2px_0_var(--line-strong)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <Avatar
+                  name={u.name || u.email}
+                  src={u.avatarUrl}
+                  size="md"
+                />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h4 className="font-display font-extrabold text-sm text-ink truncate">
+                      {u.name || u.email.split("@")[0]}
+                    </h4>
+                    <Chip variant={roleVariant} className="text-[10px] uppercase font-black">
+                      {u.role}
+                    </Chip>
+                    {u.role === "faculty" && !u.approved && (
+                      <Chip variant="sun" className="text-[10px] font-bold">
+                        Pending
+                      </Chip>
+                    )}
+                  </div>
+                  <p className="text-xs font-semibold text-ink-3 truncate">
+                    {u.email}
+                  </p>
+                </div>
               </div>
-              <span
-                className={`rounded px-2 py-0.5 text-xs font-medium ${
-                  roleColors[u.role]
-                }`}
-              >
-                {u.role}
-              </span>
-              {u.role === "faculty" && (
-                <span
-                  className={`text-xs ${
-                    u.approved ? "text-success" : "text-warning"
-                  }`}
-                >
-                  {u.approved ? "Approved" : "Pending"}
-                </span>
-              )}
+
+              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                {u.role === "faculty" && !u.approved && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handleFacultyApprove(u.uid)}
+                    loading={approvingUid === u.uid}
+                  >
+                    <Check size={14} weight="bold" />
+                    Approve
+                  </Button>
+                )}
+
+                <div className="w-36">
+                  <Select
+                    value={u.role}
+                    onChange={(e) =>
+                      handleRoleChange(u.uid, e.target.value as UserRole)
+                    }
+                    disabled={changingRole === u.uid}
+                    options={[
+                      { value: "student", label: "Student" },
+                      { value: "faculty", label: "Faculty" },
+                      { value: "admin", label: "Admin" },
+                    ]}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <select
-                value={u.role}
-                onChange={(e) =>
-                  handleRoleChange(u.uid, e.target.value as UserRole)
-                }
-                disabled={changingRole === u.uid}
-                className="rounded border border-border bg-input-bg px-2 py-1 text-xs text-text-primary outline-none focus:border-accent"
-              >
-                <option value="student">Student</option>
-                <option value="faculty">Faculty</option>
-                <option value="admin">Admin</option>
-              </select>
-              {u.role === "faculty" && !u.approved && (
-                <Button
-                  variant="primary"
-                  onClick={() => handleFacultyApprove(u.uid)}
-                  loading={approvingUid === u.uid}
-                >
-                  Approve
-                </Button>
-              )}
-            </div>
-          </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

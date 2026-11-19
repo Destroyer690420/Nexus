@@ -45,3 +45,8 @@ next-env.d.ts
 
 # backups
 .backup/
+
+# ui test users
+.ui-test-users.json
+test-results/
+playwright-report/

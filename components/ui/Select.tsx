@@ -1,56 +1,128 @@
 "use client";
 
-import { type SelectHTMLAttributes, forwardRef } from "react";
+import React, { useId } from "react";
+import { CaretDown } from "@phosphor-icons/react";
 
-interface SelectOption {
-  value: string;
+export interface SelectOption {
+  value: string | number;
   label: string;
 }
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+export interface SelectProps
+  extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
-  options: SelectOption[];
-  placeholder?: string;
+  options?: SelectOption[];
 }
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, placeholder, className = "", id, ...props }, ref) => {
-    const selectId = id || label?.toLowerCase().replace(/\s+/g, "-");
+export function Select({
+  label,
+  error,
+  options,
+  children,
+  className = "",
+  id,
+  ...props
+}: SelectProps) {
+  const generatedId = useId();
+  const selectId = id || generatedId;
 
-    return (
-      <div className="flex flex-col gap-1.5">
-        {label && (
-          <label
-            htmlFor={selectId}
-            className="text-sm font-medium text-text-primary"
-          >
-            {label}
-          </label>
-        )}
-        <select
-          ref={ref}
-          id={selectId}
-          className={`rounded-[var(--radius-md)] border border-border bg-input-bg px-3.5 py-2.5 text-sm text-text-primary transition-all duration-200 ease-out outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-50 disabled:cursor-not-allowed appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%238b95a8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10 ${error ? "border-destructive focus:border-destructive focus:ring-destructive/20" : ""} ${className}`}
-          {...props}
+  return (
+    <div className="w-full flex flex-col gap-1.5">
+      {label && (
+        <label
+          htmlFor={selectId}
+          className="text-[14px] font-display font-extrabold text-ink"
         >
-          {placeholder && (
-            <option value="" disabled>
-              {placeholder}
-            </option>
-          )}
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
+          {label}
+        </label>
+      )}
+      <div className="relative flex items-center">
+        <select
+          {...props}
+          id={selectId}
+          aria-invalid={Boolean(error)}
+          className={`w-full h-12 pl-4 pr-10 rounded-[14px] border-2 bg-surface text-ink text-[16px] outline-none appearance-none transition-all cursor-pointer ${
+            error
+              ? "border-crimson focus:border-crimson focus:ring-2 focus:ring-crimson/20"
+              : "border-line focus:border-berry focus:ring-2 focus:ring-berry/20"
+          } ${className}`}
+        >
+          {options
+            ? options.map((opt) => (
+                <option key={String(opt.value)} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))
+            : children}
         </select>
-        {error && (
-          <span className="text-xs text-destructive">{error}</span>
-        )}
+        <div className="absolute right-3.5 pointer-events-none text-ink-3">
+          <CaretDown size={18} weight="bold" />
+        </div>
       </div>
-    );
-  }
-);
+      {error && (
+        <p className="text-[13px] font-semibold text-crimson mt-0.5">{error}</p>
+      )}
+    </div>
+  );
+}
 
-Select.displayName = "Select";
+export interface SwitchProps {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label?: string;
+  description?: string;
+  disabled?: boolean;
+  id?: string;
+}
+
+export function Switch({
+  checked,
+  onChange,
+  label,
+  description,
+  disabled = false,
+  id,
+}: SwitchProps) {
+  const generatedId = useId();
+  const switchId = id || generatedId;
+
+  return (
+    <div className="flex items-center justify-between gap-4 py-1">
+      {(label || description) && (
+        <div className="flex-1">
+          {label && (
+            <label
+              htmlFor={switchId}
+              className="text-[15px] font-display font-extrabold text-ink block cursor-pointer"
+            >
+              {label}
+            </label>
+          )}
+          {description && (
+            <p className="text-[13px] text-ink-2 mt-0.5 leading-snug">
+              {description}
+            </p>
+          )}
+        </div>
+      )}
+      <button
+        id={switchId}
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-berry focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+          checked ? "bg-fern" : "bg-line-strong"
+        }`}
+      >
+        <span
+          className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+            checked ? "translate-x-6" : "translate-x-0"
+          }`}
+        />
+      </button>
+    </div>
+  );
+}

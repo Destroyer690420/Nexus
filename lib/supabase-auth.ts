@@ -152,11 +152,6 @@ export async function getCurrentUser() {
   return data.user;
 }
 
-export async function checkEmailVerified(userId: string): Promise<boolean> {
-  const { data } = await supabase.auth.admin.getUserById(userId);
-  return !!data.user?.email_confirmed_at;
-}
-
 const errorMessages: Record<string, string> = {
   "user_already_exists": "An account with this email already exists.",
   "invalid_credentials": "Invalid email or password.",

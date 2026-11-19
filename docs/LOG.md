@@ -24,4 +24,16 @@ N-023 | 2026-11-08 | [FEAT] | scripts/backup-index.mjs, scripts/restore-index.mj
 N-024 | 2026-11-08 | [REFACTOR] | rls-policies.sql, supabase-schema.sql | Removed obsolete root rls-policies.sql and marked supabase-schema.sql as baseline-only | undo: git revert HEAD
 N-025 | 2026-11-08 | [FEAT] | .github/workflows/keepalive.yml | Updated keepalive to query courses table with anon key and fail on non-2xx | undo: git revert HEAD
 N-026 | 2026-11-08 | [FEAT] | scripts/e2e-storage.mjs, tests/, docs/STATE.md | Added e2e verification checks for dedupe, ticket rate limiting, privacy and updated test typings | undo: git revert HEAD
-N-037 | 2026-11-17 | [FIX] | .github/workflows/keepalive.yml | Switched Supabase keepalive ping from anon to service role key so RLS cannot mask activity | undo: git revert HEAD
+N-027 | 2026-11-08 | [FEAT] | package.json, .gitignore | Phase 0 safety baseline: tagged pre-ui-redesign, created branch ui-redesign, installed UI deps | undo: git checkout main
+N-028 | 2026-11-08 | [FEAT] | redesign/INVENTORY.md, lib/auth-redirect.ts, app/(auth)/ | Phase 1: documented full route inventory and extracted centralized auth redirect logic | undo: git revert HEAD
+N-029 | 2026-11-08 | [FEAT] | components/ui/, app/globals.css, app/layout.tsx, app/dev/ui/ | Phase 2: Built tactile design system, 29 UI components, and verified contrast/axe on /dev/ui | undo: git revert HEAD
+N-030 | 2026-11-08 | [FEAT] | app/not-found.tsx, app/error.tsx, app/loading.tsx, app/(auth)/, app/dashboard/layout.tsx | Phase 3: Rebuilt tactile auth flows, onboarding stepper, waitlist, and responsive dashboard shell | undo: git revert HEAD
+N-031 | 2026-11-08 | [FEAT] | app/dashboard/{page,notes,pyqs,assignments,lab-manuals}/ | Phase 4: Rebuilt tactile dashboard home, category cards, subject lists, unit/year drilldowns, and file screens | undo: git revert HEAD
+N-032 | 2026-11-08 | [FEAT] | app/dashboard/{search,announcements,contribute,my-contributions,upload}/ | Phase 5: Rebuilt search with grouped lists, announcements with confirm sheets, and contribute/upload with dropzones | undo: git revert HEAD
+
+N-033 | 2026-11-08 | [FEAT] | app/dashboard/{profile,admin}/, types/ | Phase 6: Rebuilt user profile with avatar resize, theme toggle, and 6-tab admin panel | undo: git revert HEAD
+
+N-034 | 2026-11-08 | [FEAT] | public/, app/{layout,manifest}.ts, scripts/make-icons.mjs | Phase 7: Generated PWA brand icons, maskable icons, favicons, and manifest | undo: git revert HEAD
+N-035 | 2026-11-08 | [FEAT] | tests/, scripts/, components/ | Phase 8: E2E suite verified, 0 Axe violations, 360px layout, 9/9 passed | undo: git revert HEAD
+N-036 | 2026-11-08 | [DOC] | docs/, redesign/ | Phase 9: Finalized STATE, logged decisions D15-D19, removed temporary inventory, verified build | undo: git revert HEAD
+N-038 | 2026-11-19 | [FIX] | lib/queries.ts, types/index.ts, app/(auth)/waitlist/page.tsx, lib/supabase-auth.ts | Preserve fileId/year on approval, fix waitlist realtime uid filter, remove dead admin auth call | undo: git revert HEAD

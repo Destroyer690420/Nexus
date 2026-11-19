@@ -1,24 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button, Card } from "@/components/ui";
+import { useState, useEffect, useMemo } from "react";
+import { Trash } from "@phosphor-icons/react";
+import {
+  Chip,
+  SearchField,
+  ScrollTabs,
+  ConfirmSheet,
+  Stickie,
+} from "@/components/ui";
 import { getAllResources, deleteResource } from "@/lib/queries";
 import type { Resource, ResourceType } from "@/types";
-
-const resourceLabels: Record<ResourceType, string> = {
-  notes: "Notes",
-  pyqs: "PYQs",
-  assignments: "Assignments",
-  lab_manuals: "Lab Manuals",
-  others: "Others",
-};
 
 export function ResourcesTab() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState<ResourceType | "all">("all");
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [deletingType, setDeletingType] = useState<ResourceType | null>(null);
+  const [filterType, setFilterType] = useState<string>("all");
+  const [search, setSearch] = useState("");
+  const [targetDelete, setTargetDelete] = useState<{ id: string; type: ResourceType } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadResources().finally(() => setLoading(false));
@@ -37,137 +37,134 @@ export function ResourcesTab() {
   };
 
   const handleDelete = async () => {
-    if (!deleteConfirm || !deletingType) return;
+    if (!targetDelete) return;
+    setDeleting(true);
     try {
-      await deleteResource(deletingType, deleteConfirm);
-      setDeleteConfirm(null);
-      setDeletingType(null);
+      await deleteResource(targetDelete.type, targetDelete.id);
+      setTargetDelete(null);
       await loadResources();
     } catch {
       alert("Failed to delete resource.");
     }
+    setDeleting(false);
   };
 
-  const filtered =
-    filterType === "all"
-      ? resources
-      : resources.filter((r) => r.type === filterType);
+  const filtered = useMemo(() => {
+    return resources.filter((r) => {
+      const matchType = filterType === "all" || r.type === filterType;
+      const matchSearch =
+        !search.trim() ||
+        r.title.toLowerCase().includes(search.toLowerCase()) ||
+        (r.subjectId && r.subjectId.toLowerCase().includes(search.toLowerCase()));
+      return matchType && matchSearch;
+    });
+  }, [resources, filterType, search]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin h-6 w-6 border-2 border-text-tertiary border-t-accent rounded-full" />
+      <div className="py-12 flex flex-col items-center justify-center gap-3">
+        <Stickie mood="think" size={80} />
+        <p className="font-display font-extrabold text-sm text-ink-3">
+          Loading library resources...
+        </p>
       </div>
     );
   }
 
+  const tabs = [
+    { id: "all", label: `All (${resources.length})` },
+    { id: "notes", label: "Notes" },
+    { id: "pyqs", label: "PYQs" },
+    { id: "assignments", label: "Assignments" },
+    { id: "lab_manuals", label: "Lab Manuals" },
+  ];
+
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          onClick={() => setFilterType("all")}
-          className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
-            filterType === "all"
-              ? "bg-accent text-white"
-              : "bg-surface text-text-secondary hover:text-text-primary"
-          }`}
-        >
-          All
-        </button>
-        {(Object.keys(resourceLabels) as ResourceType[]).map((type) => (
-          <button
-            key={type}
-            onClick={() => setFilterType(type)}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
-              filterType === type
-                ? "bg-accent text-white"
-                : "bg-surface text-text-secondary hover:text-text-primary"
-            }`}
-          >
-            {resourceLabels[type]}
-          </button>
-        ))}
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="max-w-xs flex-1">
+          <SearchField
+            value={search}
+            onChange={setSearch}
+            placeholder="Search by title or subject ID..."
+          />
+        </div>
       </div>
 
-      <p className="text-sm text-text-secondary mb-4">
-        {filtered.length} resource{filtered.length !== 1 ? "s" : ""}.
-      </p>
+      <ScrollTabs
+        tabs={tabs}
+        activeTab={filterType}
+        onChange={setFilterType}
+      />
 
       {filtered.length === 0 ? (
-        <Card>
-          <p className="text-sm text-text-secondary">
-            No resources found.
-          </p>
-        </Card>
+        <div className="p-8 rounded-[24px] border-2 border-line bg-surface text-center flex flex-col items-center gap-4">
+          <Stickie mood="think" size={100} />
+          <div className="space-y-1">
+            <h3 className="font-display font-black text-lg text-ink">
+              No matching resources
+            </h3>
+            <p className="text-xs font-semibold text-ink-3 max-w-xs mx-auto">
+              No resources found for the selected filter or search term.
+            </p>
+          </div>
+        </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="space-y-2.5">
           {filtered.map((r) => (
-            <Card
-              key={`${r.type}-${r.id}`}
-              className="p-3 flex items-center justify-between"
+            <div
+              key={r.id}
+              className="p-4 rounded-[18px] border-2 border-line bg-surface shadow-[0_2px_0_var(--line-strong)] flex items-center justify-between gap-3"
             >
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="rounded bg-accent-light px-2 py-0.5 text-xs font-medium text-accent uppercase flex-shrink-0">
-                  {r.type}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-text-primary truncate">
-                    {r.title}
-                  </p>
-                  <p className="text-xs text-text-tertiary">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                  <Chip variant="neutral" className="uppercase text-[9px] font-black">
+                    {r.type}
+                  </Chip>
+                  {r.unit && (
+                    <Chip variant="berry" className="text-[9px] font-bold">
+                      Unit {r.unit}
+                    </Chip>
+                  )}
+                  {r.year && (
+                    <Chip variant="sun" className="text-[9px] font-bold">
+                      {r.year}
+                    </Chip>
+                  )}
+                  <span className="text-[11px] font-semibold text-ink-3">
                     {new Date(r.createdAt).toLocaleDateString()}
-                  </p>
+                  </span>
                 </div>
+                <h4 className="font-display font-bold text-sm text-ink truncate">
+                  {r.title}
+                </h4>
               </div>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setDeleteConfirm(r.id);
-                  setDeletingType(r.type);
-                }}
+
+              <button
+                type="button"
+                onClick={() => setTargetDelete({ id: r.id, type: r.type })}
+                className="w-8 h-8 rounded-[8px] flex items-center justify-center text-ink-3 hover:text-crimson hover:bg-crimson-tint transition-colors shrink-0"
+                title="Delete resource"
+                aria-label="Delete resource"
               >
-                Delete
-              </Button>
-            </Card>
+                <Trash size={16} weight="bold" />
+              </button>
+            </div>
           ))}
         </div>
       )}
 
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setDeleteConfirm(null)}
-          />
-          <div className="relative z-10 w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-lg">
-            <h2 className="text-lg font-semibold text-text-primary mb-4">
-              Delete Resource
-            </h2>
-            <div className="flex flex-col gap-4">
-              <p className="text-sm text-text-secondary">
-                Are you sure you want to delete this resource? This cannot be
-                undone.
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => setDeleteConfirm(null)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDelete}
-                  className="flex-1"
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete Confirmation Sheet */}
+      <ConfirmSheet
+        open={Boolean(targetDelete)}
+        onClose={() => setTargetDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete Resource"
+        description="Are you sure you want to delete this resource from the catalog? It will no longer be available to students."
+        confirmLabel="Delete resource"
+        destructive
+        loading={deleting}
+      />
     </div>
   );
 }
